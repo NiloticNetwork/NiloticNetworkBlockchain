@@ -1,0 +1,64 @@
+{
+    "name": "parrot-backend",
+    "version": "1.0.0",
+    "description": "Backend API for Parrot SocialFi platform",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "helmet": "^7.0.0",
+        "morgan": "^1.10.0",
+        "dotenv": "^16.3.1",
+        "ethers": "^5.7.2",
+        "web3": "^1.10.0",
+        "jsonwebtoken": "^9.0.2",
+        "bcryptjs": "^2.4.3",
+        "multer": "^1.4.5-lts.1",
+        "ipfs-http-client": "^60.0.1",
+        "axios": "^1.5.0",
+        "redis": "^4.6.8",
+        "mongoose": "^7.5.0",
+        "joi": "^17.9.2",
+        "rate-limiter-flexible": "^3.0.8",
+        "compression": "^1.7.4",
+        "express-rate-limit": "^6.10.0",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.0",
+        "node-cron": "^3.0.2",
+        "winston": "^3.10.0",
+        "tensorflow": "^2.13.0",
+        "@tensorflow/tfjs-node": "^4.10.0",
+        "natural": "^6.5.0",
+        "sentiment": "^5.0.2"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1",
+        "jest": "^29.6.2",
+        "supertest": "^6.3.3",
+        "eslint": "^8.47.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-plugin-import": "^2.28.0"
+    },
+    "keywords": [
+        "blockchain",
+        "nilotic",
+        "parrot",
+        "socialfi",
+        "ai",
+        "api",
+        "nodejs"
+    ],
+    "author": "Parrot Team",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

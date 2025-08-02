@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilotic dApp Template - Enhanced</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --success-color: #4facfe;
+            --warning-color: #f093fb;
+            --error-color: #f5576c;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #f87171;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.wallet {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .card-icon.contract {
+            background: linear-gradient(135deg, var(--success-color), #00f2fe);
+        }
+
+        .card-icon.transaction {
+            background: linear-gradient(135deg, var(--warning-color), var(--error-color));
+        }
+
+        .card-icon.explorer {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--bg-secondary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--bg-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-area {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: var(--transition);
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .wallet-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: var(--bg-secondary);
+        }
+
+        .wallet-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .wallet-item:hover {
+            background: #f8fafc;
+            transform: translateX(5px);
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .wallet-balance {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .wallet-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .wallet-detail {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .wallet-detail:last-child {
+            border-bottom: none;
+        }
+
+        .wallet-detail strong {
+            color: #fbbf24;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-rocket"></i> Nilotic dApp Template</h1>
+            <p>Enhanced Smart Contract Development & Blockchain Interaction</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Connecting to blockchain...</span>
+            </div>
+            <div class="status-metrics">
+                <span id="block-count">Blocks: 0</span> |
+                <span id="transaction-count">Txs: 0</span> |
+                <span id="contract-count">Contracts: 0</span>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <!-- Wallet Connection -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon wallet">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Wallet Connection</div>
+                        <div class="card-subtitle">Connect and manage wallets</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Wallet Address</label>
+                    <input type="text" class="form-input" id="wallet-address" placeholder="Enter your wallet address"
+                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                </div>
+
+                <button class="btn btn-primary" id="connect-wallet">
+                    <i class="fas fa-link"></i>
+                    <span class="btn-text">Connect Wallet</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <button class="btn btn-secondary" id="refresh-wallets">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="btn-text">Refresh All Wallets</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <button class="btn btn-success" id="create-wallet">
+                    <i class="fas fa-plus"></i>
+                    <span class="btn-text">Create New Wallet</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <div id="wallet-status" class="result-area" style="display: none;">
+                    Wallet status will appear here
+                </div>
+
+                <div id="wallet-list" class="wallet-list" style="display: none;">
+                    <h4>Available Wallets:</h4>
+                    <div id="wallets-container"></div>
+                </div>
+
+                <div id="new-wallet-info" class="wallet-info" style="display: none;">
+                    <h4>New Wallet Created:</h4>
+                    <div id="new-wallet-details"></div>
+                </div>
+            </div>
+
+            <!-- Smart Contract Deployment -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon contract">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Smart Contract</div>
+                        <div class="card-subtitle">Deploy and interact with contracts</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contract Owner</label>
+                    <input type="text" class="form-input" id="contract-owner" placeholder="Enter contract owner address"
+                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Programming Language</label>
+                    <select class="form-input" id="contract-language" style="margin-bottom: 10px;">
+                        <option value="solidity">Solidity</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="python">Python</option>
+                    </select>
+                    <label class="form-label">Contract Code</label>
+                    <textarea class="form-input" id="contract-code" rows="6" placeholder="Enter smart contract code">// Simple Storage Contract
+contract SimpleStorage {
+    uint256 private storedData;
+    
+    event DataStored(address indexed sender, uint256 value);
+    
+    function set(uint256 x) public {
+        storedData = x;
+        emit DataStored(msg.sender, x);
+    }
+    
+    function get() public view returns (uint256) {
+        return storedData;
+    }
+}</textarea>
+                </div>
+
+                <button class="btn btn-success" id="deploy-contract">
+                    <i class="fas fa-upload"></i>
+                    <span class="btn-text">Deploy Contract</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <div id="deploy-status" class="result-area" style="display: none;">
+                    Contract deployment result will appear here
+                </div>
+            </div>
+
+            <!-- Contract Interaction -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon contract">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Contract Interaction</div>
+                        <div class="card-subtitle">Call contract functions</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contract Address</label>
+                    <input type="text" class="form-input" id="contract-address"
+                        placeholder="Enter deployed contract address">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Function Name</label>
+                    <input type="text" class="form-input" id="function-name" placeholder="e.g., set, get">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Arguments (JSON array)</label>
+                    <input type="text" class="form-input" id="function-args" placeholder='e.g., ["42"]'>
+                </div>
+
+                <button class="btn btn-primary" id="call-function">
+                    <i class="fas fa-play"></i>
+                    <span class="btn-text">Call Function</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <div id="call-status" class="result-area" style="display: none;">
+                    Function call result will appear here
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon transaction">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Transaction History</div>
+                        <div class="card-subtitle">View blockchain transactions</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Filter by Address (optional)</label>
+                    <input type="text" class="form-input" id="history-address"
+                        placeholder="Enter address to filter transactions"
+                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                </div>
+
+                <button class="btn btn-secondary" id="refresh-transactions">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="btn-text">Refresh Transactions</span>
+                    <div class="loading" style="display: none;"></div>
+                </button>
+
+                <div id="transaction-history" class="result-area" style="display: none;">
+                    Transaction history will appear here
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon explorer">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <div class="card-title">Results & Logs</div>
+                    <div class="card-subtitle">View operation results and logs</div>
+                </div>
+            </div>
+
+            <div id="results" class="result-area">
+                Welcome to Nilotic dApp Template! Connect your wallet to get started.
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script>
+        class EnhancedNiloticDApp {
+            constructor(blockchainUrl = 'http://localhost:5500') {
+                this.blockchainUrl = blockchainUrl;
+                this.contracts = new Map();
+                this.wallet = null;
+                this.isConnected = false;
+            }
+
+            async connectWallet(address) {
+                try {
+                    // Verify the address exists by checking balance
+                    const balance = await this.getBalance(address);
+                    this.wallet = { address: address, balance: balance.balance };
+                    this.isConnected = true;
+
+                    return {
+                        success: true,
+                        address: address,
+                        balance: balance.balance
+                    };
+                } catch (error) {
+                    throw new Error(`Failed to connect wallet: ${error.message}`);
+                }
+            }
+
+            async getBalance(address) {
+                try {
+                    const response = await fetch(`${this.blockchainUrl}/balance?address=${encodeURIComponent(address)}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    throw new Error(`Failed to get balance: ${error.message}`);
+                }
+            }
+
+            async deployContract(owner, contractCode) {
+                try {
+                    const response = await fetch(`${this.blockchainUrl}/transaction`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'contract_deployment',
+                            sender: owner,
+                            contractCode: contractCode
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const contractAddress = this.generateContractAddress(contractCode, owner);
+                        this.contracts.set(contractAddress, {
+                            address: contractAddress,
+                            code: contractCode,
+                            owner: owner
+                        });
+
+                        return {
+                            success: true,
+                            contractAddress: contractAddress,
+                            transactionHash: result.transaction?.hash || 'pending'
+                        };
+                    } else {
+                        throw new Error(result.message || 'Contract deployment failed');
+                    }
+                } catch (error) {
+                    throw new Error(`Failed to deploy contract: ${error.message}`);
+                }
+            }
+
+            async callContract(contractAddress, caller, functionName, args = []) {
+                try {
+                    const response = await fetch(`${this.blockchainUrl}/transaction`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'contract_call',
+                            sender: caller,
+                            contractAddress: contractAddress,
+                            functionName: functionName,
+                            args: args
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        return {
+                            success: true,
+                            result: result.returnValue || 'Function called successfully',
+                            gasUsed: result.gasUsed || 0,
+                            transactionHash: result.transaction?.hash || 'pending'
+                        };
+                    } else {
+                        throw new Error(result.message || 'Contract call failed');
+                    }
+                } catch (error) {
+                    throw new Error(`Failed to call contract: ${error.message}`);
+                }
+            }
+
+            async getAllTransactions() {
+                try {
+                    const response = await fetch(`${this.blockchainUrl}/chain`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const chain = await response.json();
+                    const transactions = [];
+
+                    chain.forEach((block, blockIndex) => {
+                        try {
+                            if (block.data && typeof block.data === 'string' && block.data !== 'Genesis Block') {
+                                const data = JSON.parse(block.data);
+                                if (data.type === 'transaction' || data.type === 'contract_deployment' ||
+                                    data.type === 'contract_call' || data.type === 'mining_reward') {
+                                    transactions.push({
+                                        blockIndex: blockIndex,
+                                        blockHash: block.hash,
+                                        ...data
+                                    });
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error parsing block data:', err);
+                        }
+                    });
+
+                    return transactions;
+                } catch (error) {
+                    throw new Error(`Failed to get transactions: ${error.message}`);
+                }
+            }
+
+            async getBlockchainInfo() {
+                try {
+                    const response = await fetch(`${this.blockchainUrl}/`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    throw new Error(`Failed to get blockchain info: ${error.message}`);
+                }
+            }
+
+            generateContractAddress(contractCode, owner) {
+                const data = contractCode + owner + Date.now();
+                let hash = 0;
+                for (let i = 0; i < data.length; i++) {
+                    const char = data.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return '0x' + Math.abs(hash).toString(16).padStart(40, '0');
+            }
+
+            async getAllWallets() {
+                try {
+                    const transactions = await this.getAllTransactions();
+                    const wallets = new Map();
+
+                    // Extract unique addresses from transactions
+                    transactions.forEach(tx => {
+                        if (tx.sender) wallets.set(tx.sender, { address: tx.sender, balance: 0 });
+                        if (tx.recipient) wallets.set(tx.recipient, { address: tx.recipient, balance: 0 });
+                        if (tx.miner) wallets.set(tx.miner, { address: tx.miner, balance: 0 });
+                    });
+
+                    // Get balances for all wallets
+                    const walletList = [];
+                    for (const [address, wallet] of wallets) {
+                        try {
+                            const balance = await this.getBalance(address);
+                            wallet.balance = balance.balance;
+                            walletList.push(wallet);
+                        } catch (error) {
+                            console.error(`Failed to get balance for ${address}:`, error);
+                            walletList.push(wallet);
+                        }
+                    }
+
+                    return walletList;
+                } catch (error) {
+                    throw new Error(`Failed to get wallets: ${error.message}`);
+                }
+            }
+        }
+
+        // Initialize dApp
+        const dapp = new EnhancedNiloticDApp('http://localhost:5500');
+
+        // DOM elements
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const blockCount = document.getElementById('block-count');
+        const transactionCount = document.getElementById('transaction-count');
+        const contractCount = document.getElementById('contract-count');
+
+        const walletAddress = document.getElementById('wallet-address');
+        const connectWalletBtn = document.getElementById('connect-wallet');
+        const refreshWalletsBtn = document.getElementById('refresh-wallets');
+        const createWalletBtn = document.getElementById('create-wallet');
+        const walletStatus = document.getElementById('wallet-status');
+        const walletList = document.getElementById('wallet-list');
+        const newWalletInfo = document.getElementById('new-wallet-info');
+        const newWalletDetails = document.getElementById('new-wallet-details');
+        const walletsContainer = document.getElementById('wallets-container');
+
+        const contractOwner = document.getElementById('contract-owner');
+        const contractLanguage = document.getElementById('contract-language');
+        const contractCode = document.getElementById('contract-code');
+        const deployContractBtn = document.getElementById('deploy-contract');
+        const deployStatus = document.getElementById('deploy-status');
+
+        const contractAddress = document.getElementById('contract-address');
+        const functionName = document.getElementById('function-name');
+        const functionArgs = document.getElementById('function-args');
+        const callFunctionBtn = document.getElementById('call-function');
+        const callStatus = document.getElementById('call-status');
+
+        const historyAddress = document.getElementById('history-address');
+        const refreshTransactionsBtn = document.getElementById('refresh-transactions');
+        const transactionHistory = document.getElementById('transaction-history');
+        const results = document.getElementById('results');
+
+        // Utility functions
+        function setLoading(button, isLoading) {
+            const btnText = button.querySelector('.btn-text');
+            const loading = button.querySelector('.loading');
+
+            if (isLoading) {
+                btnText.style.display = 'none';
+                loading.style.display = 'inline-block';
+                button.disabled = true;
+            } else {
+                btnText.style.display = 'inline';
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        function showResult(element, content, isError = false) {
+            element.style.display = 'block';
+            element.textContent = content;
+            element.style.borderLeft = isError ? '4px solid var(--error-color)' : '4px solid var(--success-color)';
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+            `;
+
+            container.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 4000);
+        }
+
+        function updateStatus(isOnline) {
+            statusDot.className = `status-dot ${isOnline ? '' : 'offline'}`;
+            statusText.textContent = isOnline ? 'Connected to blockchain' : 'Disconnected from blockchain';
+        }
+
+        // Event listeners
+        connectWalletBtn.addEventListener('click', async () => {
+            const address = walletAddress.value.trim();
+            if (!address) {
+                showNotification('Please enter a wallet address', 'error');
+                return;
+            }
+
+            setLoading(connectWalletBtn, true);
+            try {
+                const result = await dapp.connectWallet(address);
+
+                showResult(walletStatus, JSON.stringify(result, null, 2));
+                showNotification(`Connected to wallet: ${address}`, 'success');
+
+                results.textContent = `Wallet connected successfully!\nAddress: ${result.address}\nBalance: ${result.balance}`;
+
+                // Update contract owner field
+                contractOwner.value = address;
+
+            } catch (error) {
+                showResult(walletStatus, `Error: ${error.message}`, true);
+                showNotification('Failed to connect wallet', 'error');
+            } finally {
+                setLoading(connectWalletBtn, false);
+            }
+        });
+
+        refreshWalletsBtn.addEventListener('click', async () => {
+            setLoading(refreshWalletsBtn, true);
+            try {
+                const wallets = await dapp.getAllWallets();
+
+                walletsContainer.innerHTML = wallets.map(wallet => `
+                    <div class="wallet-item">
+                        <div class="wallet-address">${wallet.address}</div>
+                        <div class="wallet-balance">Balance: ${wallet.balance}</div>
+                    </div>
+                `).join('');
+
+                walletList.style.display = 'block';
+                showNotification(`Found ${wallets.length} wallets`, 'success');
+
+            } catch (error) {
+                showNotification('Failed to get wallets', 'error');
+            } finally {
+                setLoading(refreshWalletsBtn, false);
+            }
+        });
+
+        createWalletBtn.addEventListener('click', async () => {
+            setLoading(createWalletBtn, true);
+            try {
+                const response = await fetch(`${dapp.blockchainUrl}/create-wallet`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const wallet = result.wallet;
+                    showNotification('Wallet created successfully!', 'success');
+
+                    // Display new wallet details
+                    newWalletDetails.innerHTML = `
+                        <div class="wallet-detail">
+                            <strong>Address:</strong> ${wallet.address}
+                        </div>
+                        <div class="wallet-detail">
+                            <strong>Private Key:</strong> ${wallet.private_key}
+                        </div>
+                        <div class="wallet-detail">
+                            <strong>Public Key:</strong> ${wallet.public_key}
+                        </div>
+                        <div class="wallet-detail">
+                            <strong>Mnemonic:</strong> ${wallet.mnemonic}
+                        </div>
+                        <div class="wallet-detail">
+                            <strong>Created:</strong> ${wallet.created_at}
+                        </div>
+                        <div class="wallet-detail">
+                            <strong>Balance:</strong> ${wallet.balance}
+                        </div>
+                    `;
+                    newWalletInfo.style.display = 'block';
+
+                    // Update wallet address input
+                    walletAddressInput.value = wallet.address;
+
+                    // Refresh wallet list
+                    const wallets = await dapp.getAllWallets();
+                    updateWalletList(wallets.wallets);
+                } else {
+                    showNotification('Failed to create wallet: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating wallet: ' + error.message, 'error');
+            } finally {
+                setLoading(createWalletBtn, false);
+            }
+        });
+
+        deployContractBtn.addEventListener('click', async () => {
+            const owner = contractOwner.value.trim();
+            const code = contractCode.value.trim();
+
+            if (!owner || !code) {
+                showNotification('Please fill all contract fields', 'error');
+                return;
+            }
+
+            setLoading(deployContractBtn, true);
+            try {
+                const result = await dapp.deployContract(owner, code);
+
+                showResult(deployStatus, JSON.stringify(result, null, 2));
+                showNotification('Contract deployed successfully', 'success');
+
+                contractAddress.value = result.contractAddress;
+                results.textContent = `Contract deployed successfully!\n\nContract Details:\nAddress: ${result.contractAddress}\nLanguage: ${result.language}\nOwner: ${result.owner}\nTimestamp: ${result.timestamp}\n\nContract Code:\n${contractCode.value}`;
+
+            } catch (error) {
+                showResult(deployStatus, `Error: ${error.message}`, true);
+                showNotification('Contract deployment failed', 'error');
+            } finally {
+                setLoading(deployContractBtn, false);
+            }
+        });
+
+        callFunctionBtn.addEventListener('click', async () => {
+            const address = contractAddress.value.trim();
+            const funcName = functionName.value.trim();
+
+            if (!address || !funcName) {
+                showNotification('Please enter contract address and function name', 'error');
+                return;
+            }
+
+            setLoading(callFunctionBtn, true);
+            try {
+                let args = [];
+                if (functionArgs.value.trim()) {
+                    args = JSON.parse(functionArgs.value);
+                }
+
+                const result = await dapp.callContract(address, walletAddress.value.trim(), funcName, args);
+
+                showResult(callStatus, JSON.stringify(result, null, 2));
+                showNotification('Function called successfully', 'success');
+
+                results.textContent = `Function called successfully!\n\nFunction Details:\nName: ${result.functionName}\nContract: ${result.contractAddress}\nLanguage: ${result.language}\nReturn Value: ${result.returnValue}\nGas Used: ${result.gasUsed}\n\nArguments: ${JSON.stringify(args)}`;
+
+            } catch (error) {
+                showResult(callStatus, `Error: ${error.message}`, true);
+                showNotification('Function call failed', 'error');
+            } finally {
+                setLoading(callFunctionBtn, false);
+            }
+        });
+
+        refreshTransactionsBtn.addEventListener('click', async () => {
+            setLoading(refreshTransactionsBtn, true);
+            try {
+                const transactions = await dapp.getAllTransactions();
+
+                if (transactions.length === 0) {
+                    showResult(transactionHistory, 'No transactions found');
+                    return;
+                }
+
+                const address = historyAddress.value.trim();
+                let filteredTransactions = transactions;
+
+                if (address) {
+                    filteredTransactions = transactions.filter(tx =>
+                        tx.sender === address || tx.recipient === address || tx.miner === address
+                    );
+                }
+
+                const transactionList = filteredTransactions.map(tx => {
+                    const type = tx.type === 'mining_reward' ? 'Mining Reward' :
+                        tx.type === 'contract_deployment' ? 'Contract Deploy' :
+                            tx.type === 'contract_call' ? 'Contract Call' : 'Transfer';
+
+                    return `Block ${tx.blockIndex}: ${type}\n` +
+                        `From: ${tx.sender || tx.miner || 'System'}\n` +
+                        `To: ${tx.recipient || tx.contractAddress || 'N/A'}\n` +
+                        `Amount: ${tx.amount || tx.reward || 'N/A'}\n` +
+                        `Hash: ${tx.blockHash}\n` +
+                        `---`;
+                }).join('\n');
+
+                showResult(transactionHistory, transactionList);
+                showNotification(`Found ${filteredTransactions.length} transactions`, 'success');
+
+            } catch (error) {
+                showResult(transactionHistory, `Error: ${error.message}`, true);
+                showNotification('Failed to get transactions', 'error');
+            } finally {
+                setLoading(refreshTransactionsBtn, false);
+            }
+        });
+
+        // Initialize
+        async function checkBlockchainStatus() {
+            try {
+                const info = await dapp.getBlockchainInfo();
+                updateStatus(true);
+
+                // Update metrics
+                if (info.chain) {
+                    blockCount.textContent = `Blocks: ${info.chain.length}`;
+                    transactionCount.textContent = `Txs: ${info.chain.reduce((total, block) => {
+                        return total + (block.transactions ? block.transactions.length : 0);
+                    }, 0)}`;
+                }
+
+                return true;
+            } catch (error) {
+                updateStatus(false);
+                return false;
+            }
+        }
+
+        // Language selection handler
+        contractLanguage.addEventListener('change', () => {
+            const language = contractLanguage.value;
+            const examples = {
+                solidity: `// Solidity Smart Contract
+contract SimpleStorage {
+    uint256 private storedData;
+    
+    event DataStored(address indexed sender, uint256 value);
+    
+    function set(uint256 x) public {
+        storedData = x;
+        emit DataStored(msg.sender, x);
+    }
+    
+    function get() public view returns (uint256) {
+        return storedData;
+    }
+}`,
+                javascript: `// JavaScript Smart Contract
+const SimpleStorage = {
+    storedData: 0,
+    
+    set: function(x) {
+        this.storedData = x;
+        console.log('Data stored:', x);
+        return 'Data stored successfully';
+    },
+    
+    get: function() {
+        return this.storedData;
+    }
+};`,
+                typescript: `// TypeScript Smart Contract
+interface StorageContract {
+    storedData: number;
+    set(x: number): string;
+    get(): number;
+}
+
+const SimpleStorage: StorageContract = {
+    storedData: 0,
+    
+    set: function(x: number): string {
+        this.storedData = x;
+        return 'Data stored successfully';
+    },
+    
+    get: function(): number {
+        return this.storedData;
+    }
+};`,
+                python: `# Python Smart Contract
+class SimpleStorage:
+    def __init__(self):
+        self.stored_data = 0
+    
+    def set(self, x):
+        self.stored_data = x
+        print(f"Data stored: {x}")
+        return "Data stored successfully"
+    
+    def get(self):
+        return self.stored_data`
+            };
+
+            contractCode.value = examples[language] || '';
+        });
+
+        // Auto-refresh status every 30 seconds
+        checkBlockchainStatus();
+        setInterval(checkBlockchainStatus, 30000);
+    </script>
+</body>
+
+</html>

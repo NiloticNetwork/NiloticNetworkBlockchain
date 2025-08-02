@@ -1,0 +1,41 @@
+{
+    "name": "parrot-contracts",
+    "version": "1.0.0",
+    "description": "Smart contracts for Parrot DApp on Nilotic blockchain",
+    "main": "index.js",
+    "scripts": {
+        "compile": "hardhat compile",
+        "test": "hardhat test",
+        "deploy": "hardhat run scripts/deploy.js",
+        "deploy:testnet": "hardhat run scripts/deploy.js --network nilotic-testnet",
+        "deploy:mainnet": "hardhat run scripts/deploy.js --network nilotic-mainnet",
+        "verify": "hardhat verify",
+        "coverage": "hardhat coverage"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^4.9.3",
+        "@openzeppelin/contracts-upgradeable": "^4.9.3",
+        "@openzeppelin/hardhat-upgrades": "^1.28.0"
+    },
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^3.0.2",
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
+        "@nomiclabs/hardhat-etherscan": "^3.1.7",
+        "chai": "^4.3.7",
+        "ethers": "^5.7.2",
+        "hardhat": "^2.17.1",
+        "hardhat-gas-reporter": "^1.0.9",
+        "solidity-coverage": "^0.8.2"
+    },
+    "keywords": [
+        "blockchain",
+        "nilotic",
+        "parrot",
+        "socialfi",
+        "ai",
+        "nft",
+        "dao"
+    ],
+    "author": "Parrot Team",
+    "license": "MIT"
+}
