@@ -177,6 +177,9 @@ public:
     bool validateBlock(const Block& block) const;
     bool validateTransaction(const Transaction& transaction) const;
     
+    // Block reward calculation
+    uint64_t calculateBlockReward(uint64_t blockHeight);
+    
 private:
     void miningLoop(const std::string& minerAddress);
     std::vector<Transaction> selectTransactionsForBlock();
@@ -187,7 +190,6 @@ private:
     // Helper functions
     std::string createBlockHeader(const Block& block, uint64_t nonce);
     bool isHashValid(const std::string& hash, uint64_t difficulty);
-    uint64_t calculateBlockReward(uint64_t blockHeight);
     std::string createCoinbaseTransaction(const std::string& minerAddress, double reward);
 };
 

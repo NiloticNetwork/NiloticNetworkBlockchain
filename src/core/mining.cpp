@@ -227,15 +227,15 @@ Block MiningEngine::mineBlock(const std::string& minerAddress, uint64_t maxAttem
     auto startTime = std::chrono::steady_clock::now();
     
     // Create a new block
-    uint64_t blockIndex = blockchain.getChainHeight();
+    uint64_t blockIndex = blockchain.getLatestBlock().getIndex() + 1;
     std::string previousHash = blockchain.getChain().empty() ? "0" : blockchain.getLatestBlock().getHash();
     
     Block block(blockIndex, previousHash);
     
     // Add coinbase transaction
     double reward = calculateBlockReward(blockIndex);
-    std::string coinbaseTx = createCoinbaseTransaction(minerAddress, reward);
-    // Note: In a real implementation, you'd create a proper Transaction object
+    Transaction coinbaseTx("COINBASE", minerAddress, reward);
+    block.addTransaction(coinbaseTx);
     
     // Add pending transactions
     std::vector<Transaction> selectedTransactions = selectTransactionsForBlock();
@@ -245,17 +245,28 @@ Block MiningEngine::mineBlock(const std::string& minerAddress, uint64_t maxAttem
     
     // Mine the block
     uint64_t nonce = 0;
-    std::string target(currentDifficulty, '0');
+    uint64_t blockchainDifficulty = blockchain.getDifficulty();
+    std::string target(blockchainDifficulty, '0');
     std::string blockHash;
     
-    Logger::info("Starting to mine block " + std::to_string(blockIndex) + " with difficulty " + std::to_string(currentDifficulty));
+    Logger::info("Starting to mine block " + std::to_string(blockIndex) + " with difficulty " + std::to_string(blockchainDifficulty));
     
     while (!shouldStop && (maxAttempts == 0 || nonce < maxAttempts)) {
         block.setNonce(nonce);
-        blockHash = block.calculateHash();
+        block.updateHash(); // Update the block's stored hash
+        blockHash = block.getHash(); // Get the updated hash
         
-        if (blockHash.substr(0, currentDifficulty) == target) {
+        // Debug: Log every 1000th attempt
+        if (nonce % 1000 == 0) {
+            Logger::info("Mining attempt " + std::to_string(nonce) + ", Hash: " + blockHash.substr(0, 10) + "...");
+        }
+        
+        if (blockHash.substr(0, blockchainDifficulty) == target) {
             Logger::info("Block mined successfully! Hash: " + blockHash + ", Nonce: " + std::to_string(nonce));
+            
+            // Update the block's hash with the valid hash
+            // Note: The block's hash is calculated in calculateHash(), but we need to ensure it's set
+            // The block's hash should be updated when we call calculateHash() after setting the nonce
             
             auto endTime = std::chrono::steady_clock::now();
             auto miningTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -275,12 +286,12 @@ Block MiningEngine::mineBlock(const std::string& minerAddress, uint64_t maxAttem
     }
     
     Logger::warning("Mining stopped without finding a solution");
-    return Block(0, "0"); // Return empty block
+    return Block(-1, "0"); // Return invalid block to indicate failure
 }
 
 Block MiningEngine::mineBlockWithTransactions(const std::string& minerAddress, 
                                              const std::vector<Transaction>& transactions) {
-    uint64_t blockIndex = blockchain.getChainHeight();
+    uint64_t blockIndex = blockchain.getLatestBlock().getIndex() + 1;
     std::string previousHash = blockchain.getChain().empty() ? "0" : blockchain.getLatestBlock().getHash();
     
     Block block(blockIndex, previousHash);
@@ -337,6 +348,11 @@ void MiningEngine::adjustDifficulty() {
 }
 
 bool MiningEngine::validateDifficulty(const Block& block) const {
+    // Skip difficulty validation for genesis block (index 0)
+    if (block.getIndex() == 0) {
+        return true;
+    }
+    
     std::string hash = block.calculateHash();
     std::string target(currentDifficulty, '0');
     return hash.substr(0, currentDifficulty) == target;
@@ -421,8 +437,8 @@ bool MiningEngine::validateBlock(const Block& block) const {
     if (block.getIndex() < 0) return false;
     if (block.getHash().empty()) return false;
     
-    // Validate difficulty
-    if (!validateDifficulty(block)) return false;
+    // Validate difficulty (skip for genesis block)
+    if (block.getIndex() > 0 && !validateDifficulty(block)) return false;
     
     // Validate transactions
     for (const auto& tx : block.getTransactions()) {
@@ -481,19 +497,20 @@ void MiningEngine::miningLoop(const std::string& minerAddress) {
 }
 
 std::vector<Transaction> MiningEngine::selectTransactionsForBlock() {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    
     std::vector<Transaction> selected;
     uint64_t blockSize = 0;
     
+    // Get pending transactions from the blockchain
+    auto blockchainPendingTxs = blockchain.getPendingTransactions();
+    
     // Sort transactions by fee (higher fees first)
-    std::sort(pendingTransactions.begin(), pendingTransactions.end(),
+    std::sort(blockchainPendingTxs.begin(), blockchainPendingTxs.end(),
               [](const Transaction& a, const Transaction& b) {
                   // In a real implementation, you'd calculate actual fees
                   return a.getAmount() > b.getAmount();
               });
     
-    for (const auto& tx : pendingTransactions) {
+    for (const auto& tx : blockchainPendingTxs) {
         // Check block size limit
         if (blockSize + tx.calculateHash().length() > config.maxBlockSize) {
             break;

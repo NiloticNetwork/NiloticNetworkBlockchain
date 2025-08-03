@@ -2,6 +2,7 @@
 #define API_H
 
 #include "blockchain.h"
+#include "mining.h"
 #include <thread>
 #include <atomic>
 #include <sys/socket.h>
@@ -10,6 +11,7 @@
 class API {
 private:
     Blockchain& blockchain;
+    MiningEngine miningEngine;
     std::atomic<bool> running;
     std::thread server_thread;
     int server_fd;

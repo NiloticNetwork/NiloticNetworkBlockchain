@@ -114,6 +114,10 @@ public:
     
     // Set nonce for mining
     void setNonce(uint64_t nonceValue) { nonce = nonceValue; }
+    
+    // Update hash after setting nonce
+    void updateHash() { hash = calculateHash(); }
+    
     std::string getSignature() const { return signature; }
     
     // Format timestamp as string

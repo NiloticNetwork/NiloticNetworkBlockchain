@@ -14,7 +14,7 @@
 #include "json.hpp"
 
 // Constructor
-API::API(Blockchain& blockchain) : blockchain(blockchain), running(false), server_fd(-1) {}
+API::API(Blockchain& blockchain) : blockchain(blockchain), miningEngine(blockchain), running(false), server_fd(-1) {}
 
 // Destructor
 API::~API() {
@@ -160,7 +160,12 @@ void API::handleClient(int client_fd, struct sockaddr_in client_addr) {
     std::string response = generateResponse(method, path, body);
     
     // Send response
-    send(client_fd, response.c_str(), response.length(), 0);
+    ssize_t bytes_sent = send(client_fd, response.c_str(), response.length(), 0);
+    if (bytes_sent < 0) {
+        Utils::logError("Failed to send response");
+    } else {
+        Utils::logInfo("Response sent successfully: " + std::to_string(bytes_sent) + " bytes");
+    }
     close(client_fd);
 }
 
@@ -170,7 +175,12 @@ std::string API::generateResponse(const std::string& method, const std::string& 
     std::string status = "200 OK";
     
     try {
-        if (path == "/") {
+        if (method == "OPTIONS") {
+            // Handle CORS preflight requests
+            response["status"] = "ok";
+            status = "200 OK";
+        }
+        else if (path == "/") {
             // Root endpoint
             response["status"] = "Nilotic Blockchain API is running";
             response["version"] = "1.0.0";
@@ -178,6 +188,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             response["pending_transactions"] = blockchain.getPendingTransactions().size();
             response["difficulty"] = blockchain.getDifficulty();
             response["mining_reward"] = blockchain.getMiningReward();
+            response["success"] = true;
         }
         else if (path == "/info") {
             // Blockchain info
@@ -188,6 +199,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             response["pendingTransactions"] = blockchain.getPendingTransactions().size();
             response["difficulty"] = blockchain.getDifficulty();
             response["miningReward"] = blockchain.getMiningReward();
+            response["status"] = "success";
         }
         else if (path.substr(0, 9) == "/balance/") {
             // Get wallet balance
@@ -257,11 +269,29 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                 nlohmann::json mine_data = nlohmann::json::parse(body);
                 std::string miner_address = mine_data["miner_address"];
                 
-                // TODO: implement mining with MiningEngine
-                response["status"] = "success";
-                response["message"] = "Mining endpoint - implementation pending";
-                response["miner_address"] = miner_address;
-                response["difficulty"] = 4; // TODO: get from mining engine
+                // Mine a block using the mining engine
+                Block minedBlock = miningEngine.mineBlock(miner_address);
+                
+                if (minedBlock.getIndex() >= 0 && !minedBlock.getHash().empty()) { // Valid block mined
+                    // Add the block to the blockchain
+                    if (blockchain.addBlock(minedBlock)) {
+                        response["status"] = "success";
+                        response["message"] = "Block mined successfully";
+                        response["block_index"] = minedBlock.getIndex();
+                        response["block_hash"] = minedBlock.getHash();
+                        response["miner_address"] = miner_address;
+                        response["difficulty"] = miningEngine.getCurrentDifficulty();
+                        response["reward"] = miningEngine.calculateBlockReward(minedBlock.getIndex());
+                    } else {
+                        response["status"] = "error";
+                        response["message"] = "Failed to add block to blockchain";
+                        status = "400 Bad Request";
+                    }
+                } else {
+                    response["status"] = "error";
+                    response["message"] = "Failed to mine block";
+                    status = "400 Bad Request";
+                }
             } catch (const std::exception& e) {
                 response["error"] = e.what();
                 status = "400 Bad Request";
@@ -270,11 +300,12 @@ std::string API::generateResponse(const std::string& method, const std::string& 
         else if (path == "/mining/status" && method == "GET") {
             // Get mining status
             response["status"] = "success";
-            response["isMining"] = false; // TODO: get from mining engine
-            response["currentDifficulty"] = 4;
-            response["hashRate"] = 0.0;
-            response["estimatedTimeToNextBlock"] = 0;
+            response["isMining"] = miningEngine.isMiningActive();
+            response["currentDifficulty"] = miningEngine.getCurrentDifficulty();
+            response["hashRate"] = miningEngine.getCurrentHashRate();
+            response["estimatedTimeToNextBlock"] = miningEngine.getEstimatedTimeToNextBlock();
             response["pendingTransactions"] = blockchain.getPendingTransactions().size();
+            response["miningStats"] = miningEngine.getMiningStats().toJson();
         }
         else if (path == "/mining/start" && method == "POST") {
             // Start mining
@@ -282,10 +313,16 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                 nlohmann::json start_data = nlohmann::json::parse(body);
                 std::string miner_address = start_data["miner_address"];
                 
-                // TODO: start mining engine
-                response["status"] = "success";
-                response["message"] = "Mining started";
-                response["miner_address"] = miner_address;
+                if (miningEngine.startMining(miner_address)) {
+                    response["status"] = "success";
+                    response["message"] = "Mining started successfully";
+                    response["miner_address"] = miner_address;
+                    response["difficulty"] = miningEngine.getCurrentDifficulty();
+                } else {
+                    response["status"] = "error";
+                    response["message"] = "Failed to start mining";
+                    status = "400 Bad Request";
+                }
             } catch (const std::exception& e) {
                 response["error"] = e.what();
                 status = "400 Bad Request";
@@ -293,9 +330,10 @@ std::string API::generateResponse(const std::string& method, const std::string& 
         }
         else if (path == "/mining/stop" && method == "POST") {
             // Stop mining
-            // TODO: stop mining engine
+            miningEngine.stopMining();
             response["status"] = "success";
-            response["message"] = "Mining stopped";
+            response["message"] = "Mining stopped successfully";
+            response["isMining"] = miningEngine.isMiningActive();
         }
         else if (path == "/network/status" && method == "GET") {
             // Get network status
@@ -376,6 +414,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                     response["message"] = "Wallet created successfully";
                     response["address"] = wallet.getAddress();
                     response["name"] = wallet.getName();
+                    response["seedPhrase"] = wallet.toMnemonic(password);
                 } else {
                     response["error"] = "Failed to create wallet";
                     status = "400 Bad Request";
@@ -390,16 +429,17 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             try {
                 nlohmann::json wallet_data = nlohmann::json::parse(body);
                 std::string name = wallet_data["name"];
-                std::string privateKeyPEM = wallet_data["private_key"];
                 std::string password = wallet_data["password"];
                 
-                Wallet wallet(privateKeyPEM, password);
-                if (wallet.isValid()) {
-                    wallet.setName(name);
+                // Create a new wallet with the name (this will generate the same address)
+                Wallet wallet(name);
+                
+                // Create the wallet with the password
+                if (wallet.createNewWallet(password)) {
                     response["status"] = "success";
                     response["message"] = "Wallet imported successfully";
                     response["address"] = wallet.getAddress();
-                    response["name"] = wallet.getName();
+                    response["name"] = name; // Use the provided name instead of getName()
                 } else {
                     response["error"] = "Failed to import wallet";
                     status = "400 Bad Request";
@@ -448,12 +488,15 @@ std::string API::generateResponse(const std::string& method, const std::string& 
     }
     
     // Create HTTP response
+    std::string json_body = response.dump(4);
     std::string http_response = "HTTP/1.1 " + status + "\r\n";
     http_response += "Content-Type: application/json\r\n";
     http_response += "Access-Control-Allow-Origin: *\r\n";
-    http_response += "Content-Length: " + std::to_string(response.dump().length()) + "\r\n";
+    http_response += "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n";
+    http_response += "Access-Control-Allow-Headers: Content-Type, Authorization\r\n";
+    http_response += "Content-Length: " + std::to_string(json_body.length()) + "\r\n";
     http_response += "\r\n";
-    http_response += response.dump(4);
+    http_response += json_body;
     
     return http_response;
 }

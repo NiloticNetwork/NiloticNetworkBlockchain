@@ -48,6 +48,10 @@ public:
         Transaction coinbase("COINBASE", "GENESIS", 1000.0);
         genesis.addTransaction(coinbase);
         
+        // Mine the genesis block to meet difficulty requirement
+        // Use difficulty 1 for genesis block to make it faster
+        genesis.mineBlock(1);
+        
         // Add genesis block to the chain
         chain.push_back(genesis);
         
@@ -55,12 +59,17 @@ public:
         balances["GENESIS"] = 1000.0;
         
         Logger::info("Genesis block created with hash: " + genesis.getHash());
+        Logger::info("Genesis block difficulty: 1, Hash: " + genesis.getHash());
     }
     
     // Get the latest block in the chain
     Block getLatestBlock() const {
+        if (chain.empty()) {
+            // Return a dummy block if chain is empty
+            return Block(0, "0");
+        }
         return chain.back();
-    }
+    } 
     
     // Add a block to the chain
     bool addBlock(Block newBlock) {
@@ -79,10 +88,13 @@ public:
         }
         
         // Verify that the block's hash is valid based on our current difficulty
-        std::string target(difficulty, '0');
-        if (newBlock.getHash().substr(0, difficulty) != target) {
-            Logger::error("Block rejected: Proof of work or stake verification failed");
-            return false;
+        // Skip difficulty validation for genesis block (index 0)
+        if (newBlock.getIndex() > 0) {
+            std::string target(difficulty, '0');
+            if (newBlock.getHash().substr(0, difficulty) != target) {
+                Logger::error("Block rejected: Proof of work or stake verification failed");
+                return false;
+            }
         }
         
         // Process transactions in the block
@@ -413,6 +425,12 @@ public:
                 chain.push_back(Block::deserialize(block_json.dump()));
             }
             
+            // If no blocks were loaded, create genesis block
+            if (chain.empty()) {
+                Logger::info("No blocks found in file, creating genesis block");
+                createGenesisBlock();
+            }
+            
             // Load the balances
             for (const auto& [address, balance] : blockchain_json["balances"].items()) {
                 balances[address] = balance.get<double>();
@@ -438,6 +456,8 @@ public:
             return true;
         } catch (const std::exception& e) {
             Logger::error("Failed to load blockchain: " + std::string(e.what()));
+            Logger::info("Creating new blockchain with genesis block");
+            createGenesisBlock();
             return false;
         }
     }
