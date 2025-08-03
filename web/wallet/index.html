@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nilotic Blockchain Wallet</title>
-    <link href="http://localhost:5500" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -98,10 +97,6 @@
             animation: pulse 2s infinite;
         }
 
-        .status-dot.offline {
-            background: #f87171;
-        }
-
         @keyframes pulse {
 
             0%,
@@ -114,280 +109,279 @@
             }
         }
 
-        /* Dashboard Grid */
-        .dashboard {
+        .status-text {
+            font-weight: 600;
+        }
+
+        .network-info {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
             margin-bottom: 30px;
         }
 
         /* Cards */
         .card {
-            background: var(--bg-primary);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             padding: 30px;
             box-shadow: var(--shadow-lg);
-            transition: var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .card-icon.wallet {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        }
-
-        .card-icon.transaction {
-            background: linear-gradient(135deg, var(--success-color), #00f2fe);
-        }
-
-        .card-icon.mining {
-            background: linear-gradient(135deg, var(--warning-color), var(--error-color));
-        }
-
-        .card-icon.explorer {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .card-title {
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
         }
 
-        .card-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-
-        /* Form Elements */
+        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
-            font-weight: 600;
             margin-bottom: 8px;
+            font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.95rem;
         }
 
         .form-input {
             width: 100%;
-            padding: 15px 20px;
+            padding: 12px 16px;
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             transition: var(--transition);
-            background: var(--bg-secondary);
+            background: white;
         }
 
         .form-input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            background: white;
         }
 
-        .form-input::placeholder {
-            color: var(--text-secondary);
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
         }
 
-        /* Buttons */
+        /* Button Styles */
         .btn {
-            padding: 15px 30px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
+            gap: 8px;
         }
 
         .btn-primary {
-            background: var(--bg-gradient);
+            background: var(--primary-color);
             color: white;
         }
 
         .btn-primary:hover {
+            background: #5a67d8;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: var(--secondary-color);
             color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #6b46c1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: var(--success-color);
             color: white;
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
+        .btn-success:hover {
+            background: #38b2ac;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        /* Loading Animation */
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #ed8936;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Wallet Info */
+        .wallet-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .balance-display {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        /* Transaction History */
+        .transaction-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+        }
+
+        .transaction-amount.positive {
+            color: var(--success-color);
+        }
+
+        .transaction-amount.negative {
+            color: var(--error-color);
+        }
+
+        /* Mining Section */
+        .mining-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .mining-status {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .mining-status.active {
+            background: rgba(74, 222, 128, 0.2);
+            color: #059669;
+        }
+
+        .mining-status.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        /* Network Section */
+        .network-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .network-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .mining-controls {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading States */
         .loading {
-            display: inline-block;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, .3);
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            to {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
                 transform: rotate(360deg);
-            }
-        }
-
-        /* Results */
-        .result-area {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            border-radius: 10px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        th {
-            background: var(--bg-secondary);
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        /* Tabs */
-        .tab-container {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-        }
-
-        .tab-header {
-            display: flex;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .tab-button.active {
-            color: var(--primary-color);
-            background: white;
-        }
-
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--bg-gradient);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 30px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
             }
         }
 
@@ -396,15 +390,13 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 20px 25px;
-            border-radius: 10px;
+            padding: 15px 20px;
+            border-radius: 8px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 1000;
-            transform: translateX(400px);
-            transition: var(--transition);
-            max-width: 400px;
-            box-shadow: var(--shadow-lg);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
         }
 
         .notification.show {
@@ -412,82 +404,15 @@
         }
 
         .notification.success {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            background: var(--success-color);
         }
 
         .notification.error {
-            background: linear-gradient(135deg, #f87171, #ef4444);
+            background: var(--error-color);
         }
 
-        .notification.info {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .tab-header {
-                flex-direction: column;
-            }
-
-            .tab-button {
-                padding: 15px;
-            }
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
+        .notification.warning {
+            background: var(--warning-color);
         }
     </style>
 </head>
@@ -496,577 +421,531 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1><i class="fas fa-coins"></i> Nilotic Blockchain</h1>
-            <p>Modern Wallet Interface for the Future of Finance</p>
+            <h1>Nilotic Blockchain Wallet</h1>
+            <p>Secure, Fast, and Production-Ready Blockchain Wallet</p>
         </div>
 
         <!-- Status Bar -->
         <div class="status-bar">
             <div class="status-indicator">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="status-text">Connecting to blockchain...</span>
+                <div class="status-dot"></div>
+                <span class="status-text" id="connectionStatus">Connecting...</span>
             </div>
-            <div class="status-metrics">
-                <span id="block-count">Blocks: 0</span> |
-                <span id="transaction-count">Txs: 0</span> |
-                <span id="response-time">Latency: 0ms</span>
+            <div class="network-info">
+                <span id="chainHeight">Height: --</span>
+                <span id="pendingTx">Pending: --</span>
+                <span id="difficulty">Difficulty: --</span>
             </div>
         </div>
 
-        <!-- Dashboard -->
-        <div class="dashboard">
-            <!-- Wallet Card -->
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Wallet Management -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon wallet">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Wallet</div>
-                        <div class="card-subtitle">Manage your funds</div>
+                <h2>Wallet Management</h2>
+
+                <div id="walletInfo" style="display: none;">
+                    <div class="wallet-info">
+                        <h3>Current Wallet</h3>
+                        <div class="wallet-address" id="currentAddress">Loading...</div>
+                        <div class="balance-display" id="currentBalance">0.00 NIL</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Wallet Address</label>
-                    <input type="text" class="form-input" id="wallet-address" placeholder="Enter your wallet address"
-                        value="my_wallet_address">
+                <div id="walletActions">
+                    <div class="form-group">
+                        <label class="form-label">Wallet Name</label>
+                        <input type="text" class="form-input" id="walletName" placeholder="Enter wallet name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="walletPassword" placeholder="Enter password">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="createWallet()">
+                            <span class="spinner" id="createSpinner" style="display: none;"></span>
+                            Create Wallet
+                        </button>
+                        <button class="btn btn-secondary" onclick="importWallet()">
+                            <span class="spinner" id="importSpinner" style="display: none;"></span>
+                            Import Wallet
+                        </button>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary" id="check-balance">
-                    <i class="fas fa-balance-scale"></i>
-                    <span class="btn-text">Check Balance</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="balance-result" class="result-area" style="display: none;">
-                    Balance information will appear here
+                <div id="importForm" style="display: none; margin-top: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Private Key (PEM)</label>
+                        <textarea class="form-input form-textarea" id="privateKeyPEM"
+                            placeholder="Paste your private key in PEM format"></textarea>
+                    </div>
+                    <button class="btn btn-success" onclick="performImport()">
+                        <span class="spinner" id="performImportSpinner" style="display: none;"></span>
+                        Import
+                    </button>
                 </div>
             </div>
 
-            <!-- Transaction Card -->
+            <!-- Send Transaction -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon transaction">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Send Transaction</div>
-                        <div class="card-subtitle">Transfer funds securely</div>
-                    </div>
+                <h2>Send Transaction</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Recipient Address</label>
+                    <input type="text" class="form-input" id="recipientAddress" placeholder="Enter recipient address">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">From Address</label>
-                    <input type="text" class="form-input" id="sender-address" placeholder="Enter sender address"
-                        value="my_wallet_address">
+                    <label class="form-label">Amount (NIL)</label>
+                    <input type="number" class="form-input" id="transactionAmount" placeholder="0.00" step="0.01"
+                        min="0">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">To Address</label>
-                    <input type="text" class="form-input" id="recipient-address" placeholder="Enter recipient address">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Amount</label>
-                    <input type="number" class="form-input" id="amount" placeholder="Enter amount to send" min="0.1"
-                        step="0.1">
-                </div>
-
-                <button class="btn btn-primary" id="send-transaction">
-                    <i class="fas fa-paper-plane"></i>
-                    <span class="btn-text">Send Transaction</span>
-                    <div class="loading" style="display: none;"></div>
+                <button class="btn btn-primary" onclick="sendTransaction()" id="sendBtn">
+                    <span class="spinner" id="sendSpinner" style="display: none;"></span>
+                    Send Transaction
                 </button>
+            </div>
+        </div>
 
-                <div id="transaction-result" class="result-area" style="display: none;">
-                    Transaction result will appear here
+        <!-- Additional Features -->
+        <div class="main-content">
+            <!-- Mining Controls -->
+            <div class="card">
+                <h2>Mining Controls</h2>
+
+                <div class="mining-status" id="miningStatus">
+                    <span id="miningStatusText">Inactive</span>
+                </div>
+
+                <div class="mining-controls">
+                    <button class="btn btn-success" onclick="startMining()" id="startMiningBtn">
+                        <span class="spinner" id="startMiningSpinner" style="display: none;"></span>
+                        Start Mining
+                    </button>
+                    <button class="btn btn-warning" onclick="stopMining()" id="stopMiningBtn">
+                        <span class="spinner" id="stopMiningSpinner" style="display: none;"></span>
+                        Stop Mining
+                    </button>
+                </div>
+
+                <div class="network-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="hashRate">0</div>
+                        <div class="stat-label">Hash Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="currentDifficulty">4</div>
+                        <div class="stat-label">Difficulty</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Mining Card -->
+            <!-- Network Status -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon mining">
-                        <i class="fas fa-hammer"></i>
+                <h2>Network Status</h2>
+
+                <div class="network-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeConnections">0</div>
+                        <div class="stat-label">Active Connections</div>
                     </div>
-                    <div>
-                        <div class="card-title">Mine Blocks</div>
-                        <div class="card-subtitle">Contribute to the network</div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPeers">0</div>
+                        <div class="stat-label">Total Peers</div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Miner Address</label>
-                    <input type="text" class="form-input" id="miner-address" placeholder="Enter miner address"
-                        value="my_wallet_address">
-                </div>
-
-                <button class="btn btn-success" id="mine-block">
-                    <i class="fas fa-cog"></i>
-                    <span class="btn-text">Mine Block</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="mining-result" class="result-area" style="display: none;">
-                    Mining result will appear here
-                </div>
-            </div>
-
-            <!-- Explorer Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon explorer">
-                        <i class="fas fa-search"></i>
+                    <div class="stat-item">
+                        <div class="stat-value" id="messagesReceived">0</div>
+                        <div class="stat-label">Messages Received</div>
                     </div>
-                    <div>
-                        <div class="card-title">Block Explorer</div>
-                        <div class="card-subtitle">View blockchain data</div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="messagesSent">0</div>
+                        <div class="stat-label">Messages Sent</div>
                     </div>
                 </div>
 
-                <button class="btn btn-secondary" id="fetch-blockchain">
-                    <i class="fas fa-sync-alt"></i>
-                    <span class="btn-text">Refresh Blockchain</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="block-explorer" class="result-area" style="display: none;">
-                    Blockchain data will appear here
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="refreshNetworkStatus()">
+                        <span class="spinner" id="networkSpinner" style="display: none;"></span>
+                        Refresh Status
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Transaction History -->
         <div class="card">
-            <div class="card-header">
-                <div class="card-icon transaction">
-                    <i class="fas fa-history"></i>
+            <h2>Recent Transactions</h2>
+            <div class="transaction-list" id="transactionHistory">
+                <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                    No transactions yet
                 </div>
-                <div>
-                    <div class="card-title">Transaction History</div>
-                    <div class="card-subtitle">View your transaction history</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Wallet Address (optional)</label>
-                <input type="text" class="form-input" id="history-address"
-                    placeholder="Enter wallet address to filter transactions" value="my_wallet_address">
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="fetch-transactions">
-                    <i class="fas fa-list"></i>
-                    <span class="btn-text">Fetch My Transactions</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-                <button class="btn btn-secondary" id="fetch-all-transactions">
-                    <i class="fas fa-globe"></i>
-                    <span class="btn-text">Fetch All Transactions</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag"></i> Block</th>
-                            <th><i class="fas fa-tag"></i> Type</th>
-                            <th><i class="fas fa-user"></i> From</th>
-                            <th><i class="fas fa-user-check"></i> To</th>
-                            <th><i class="fas fa-coins"></i> Amount</th>
-                            <th><i class="fas fa-clock"></i> Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-body">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                                <i class="fas fa-inbox"
-                                    style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                                No transactions found
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
     <!-- Notification Container -->
-    <div id="notification-container"></div>
+    <div id="notificationContainer"></div>
 
+    <script src="dapp_sdk.js"></script>
     <script>
-        class ModernBlockchainWallet {
-            constructor(apiUrl = 'http://localhost:5500') {
-                this.apiUrl = apiUrl;
-                this.isConnected = false;
-                this.metrics = {
-                    blocks: 0,
-                    transactions: 0,
-                    responseTime: 0
-                };
-            }
-
-            async getBlockchainInfo() {
-                const startTime = Date.now();
-                try {
-                    const response = await fetch(`${this.apiUrl}/`);
-                    const data = await response.json();
-                    this.metrics.responseTime = Date.now() - startTime;
-                    return data;
-                } catch (error) {
-                    throw new Error(`Failed to get blockchain info: ${error.message}`);
-                }
-            }
-
-            async getBalance(address) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/balance?address=${encodeURIComponent(address)}`);
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to get balance: ${error.message}`);
-                }
-            }
-
-            async createTransaction(sender, recipient, amount) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/transaction`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ sender, recipient, amount: parseFloat(amount) })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to create transaction: ${error.message}`);
-                }
-            }
-
-            async mineBlock(address) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/mine`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to mine block: ${error.message}`);
-                }
-            }
-
-            async getBlockchain() {
-                try {
-                    const response = await fetch(`${this.apiUrl}/chain`);
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to get blockchain: ${error.message}`);
-                }
-            }
-
-            async getAllTransactions() {
-                try {
-                    const chain = await this.getBlockchain();
-                    const transactions = [];
-
-                    chain.forEach((block, blockIndex) => {
-                        try {
-                            if (block.data && typeof block.data === 'string' && block.data !== 'Genesis Block') {
-                                const data = JSON.parse(block.data);
-                                if (data.type === 'transaction' || data.type === 'mining_reward') {
-                                    transactions.push({
-                                        blockIndex: blockIndex,
-                                        blockHash: block.hash,
-                                        ...data
-                                    });
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Error parsing block data:', err);
-                        }
-                    });
-
-                    return transactions;
-                } catch (error) {
-                    throw new Error(`Failed to get transactions: ${error.message}`);
-                }
-            }
-        }
+        // Global variables
+        let currentWallet = null;
+        let blockchainUrl = 'http://localhost:5500'; // Default API port
+        let isConnected = false;
 
         // Initialize the wallet
-        const wallet = new ModernBlockchainWallet();
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeWallet();
+            updateNetworkStatus();
+            setInterval(updateNetworkStatus, 10000); // Update every 10 seconds
+        });
 
-        // DOM elements
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
-        const blockCount = document.getElementById('block-count');
-        const transactionCount = document.getElementById('transaction-count');
-        const responseTime = document.getElementById('response-time');
+        // Initialize wallet connection
+        async function initializeWallet() {
+            try {
+                showNotification('Connecting to blockchain...', 'info');
 
-        // Wallet elements
-        const walletAddress = document.getElementById('wallet-address');
-        const checkBalanceBtn = document.getElementById('check-balance');
-        const balanceResult = document.getElementById('balance-result');
-
-        // Transaction elements
-        const senderAddress = document.getElementById('sender-address');
-        const recipientAddress = document.getElementById('recipient-address');
-        const amount = document.getElementById('amount');
-        const sendTransactionBtn = document.getElementById('send-transaction');
-        const transactionResult = document.getElementById('transaction-result');
-
-        // Mining elements
-        const minerAddress = document.getElementById('miner-address');
-        const mineBlockBtn = document.getElementById('mine-block');
-        const miningResult = document.getElementById('mining-result');
-
-        // Explorer elements
-        const fetchBlockchainBtn = document.getElementById('fetch-blockchain');
-        const blockExplorer = document.getElementById('block-explorer');
-
-        // History elements
-        const historyAddress = document.getElementById('history-address');
-        const fetchTransactionsBtn = document.getElementById('fetch-transactions');
-        const fetchAllTransactionsBtn = document.getElementById('fetch-all-transactions');
-        const transactionsBody = document.getElementById('transactions-body');
-
-        // Utility functions
-        function setLoading(button, isLoading) {
-            const btnText = button.querySelector('.btn-text');
-            const loading = button.querySelector('.loading');
-
-            if (isLoading) {
-                btnText.style.display = 'none';
-                loading.style.display = 'inline-block';
-                button.disabled = true;
-            } else {
-                btnText.style.display = 'inline';
-                loading.style.display = 'none';
-                button.disabled = false;
+                // Test connection
+                const response = await fetch(`${blockchainUrl}/info`);
+                if (response.ok) {
+                    const data = await response.json();
+                    isConnected = true;
+                    updateConnectionStatus('Connected', true);
+                    updateBlockchainInfo(data);
+                    showNotification('Connected to Nilotic Blockchain', 'success');
+                } else {
+                    throw new Error('Failed to connect');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateConnectionStatus('Disconnected', false);
+                showNotification('Failed to connect to blockchain', 'error');
             }
         }
 
-        function showResult(element, content, isError = false) {
-            element.style.display = 'block';
-            element.textContent = content;
-            element.style.borderLeft = isError ? '4px solid var(--error-color)' : '4px solid var(--success-color)';
+        // Update connection status
+        function updateConnectionStatus(status, isConnected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusDot = document.querySelector('.status-dot');
+
+            statusElement.textContent = status;
+            statusDot.style.background = isConnected ? '#4ade80' : '#f5576c';
         }
 
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('notification-container');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                ${message}
-            `;
-
-            container.appendChild(notification);
-            setTimeout(() => notification.classList.add('show'), 100);
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => container.removeChild(notification), 300);
-            }, 4000);
+        // Update blockchain information
+        function updateBlockchainInfo(data) {
+            document.getElementById('chainHeight').textContent = `Height: ${data.chainHeight || 0}`;
+            document.getElementById('pendingTx').textContent = `Pending: ${data.pendingTransactions || 0}`;
+            document.getElementById('difficulty').textContent = `Difficulty: ${data.difficulty || 4}`;
         }
 
-        function updateStatus(isOnline) {
-            statusDot.className = `status-dot ${isOnline ? '' : 'offline'}`;
-            statusText.textContent = isOnline ? 'Connected to blockchain' : 'Disconnected from blockchain';
+        // Update network status
+        async function updateNetworkStatus() {
+            try {
+                const [networkResponse, miningResponse] = await Promise.all([
+                    fetch(`${blockchainUrl}/network/status`),
+                    fetch(`${blockchainUrl}/mining/status`)
+                ]);
+
+                if (networkResponse.ok) {
+                    const networkData = await networkResponse.json();
+                    updateNetworkStats(networkData);
+                }
+
+                if (miningResponse.ok) {
+                    const miningData = await miningResponse.json();
+                    updateMiningStats(miningData);
+                }
+            } catch (error) {
+                console.error('Failed to update network status:', error);
+            }
         }
 
-        function updateMetrics() {
-            blockCount.textContent = `Blocks: ${wallet.metrics.blocks}`;
-            transactionCount.textContent = `Txs: ${wallet.metrics.transactions}`;
-            responseTime.textContent = `Latency: ${wallet.metrics.responseTime}ms`;
+        // Update network statistics
+        function updateNetworkStats(data) {
+            document.getElementById('activeConnections').textContent = data.activeConnections || 0;
+            document.getElementById('totalPeers').textContent = data.totalPeers || 0;
+            document.getElementById('messagesReceived').textContent = data.totalMessagesReceived || 0;
+            document.getElementById('messagesSent').textContent = data.totalMessagesSent || 0;
         }
 
-        // Event listeners
-        checkBalanceBtn.addEventListener('click', async () => {
-            const address = walletAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a wallet address', 'error');
+        // Update mining statistics
+        function updateMiningStats(data) {
+            document.getElementById('hashRate').textContent = data.hashRate || 0;
+            document.getElementById('currentDifficulty').textContent = data.currentDifficulty || 4;
+
+            const miningStatus = document.getElementById('miningStatus');
+            const miningStatusText = document.getElementById('miningStatusText');
+
+            if (data.isMining) {
+                miningStatus.className = 'mining-status active';
+                miningStatusText.textContent = 'Active';
+            } else {
+                miningStatus.className = 'mining-status inactive';
+                miningStatusText.textContent = 'Inactive';
+            }
+        }
+
+        // Create new wallet
+        async function createWallet() {
+            const name = document.getElementById('walletName').value;
+            const password = document.getElementById('walletPassword').value;
+
+            if (!name || !password) {
+                showNotification('Please enter wallet name and password', 'error');
                 return;
             }
 
-            setLoading(checkBalanceBtn, true);
+            showSpinner('createSpinner', true);
+
             try {
-                const balance = await wallet.getBalance(address);
-                showResult(balanceResult, JSON.stringify(balance, null, 2));
-                showNotification('Balance retrieved successfully', 'success');
+                const response = await fetch(`${blockchainUrl}/wallet/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, password })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentWallet = {
+                        address: data.address,
+                        name: data.name,
+                        privateKey: null // Not stored for security
+                    };
+
+                    showWalletInfo();
+                    showNotification('Wallet created successfully!', 'success');
+                } else {
+                    showNotification(data.error || 'Failed to create wallet', 'error');
+                }
             } catch (error) {
-                showResult(balanceResult, `Error: ${error.message}`, true);
-                showNotification('Failed to get balance', 'error');
+                console.error('Create wallet error:', error);
+                showNotification('Failed to create wallet', 'error');
             } finally {
-                setLoading(checkBalanceBtn, false);
+                showSpinner('createSpinner', false);
             }
-        });
+        }
 
-        sendTransactionBtn.addEventListener('click', async () => {
-            const sender = senderAddress.value.trim();
-            const recipient = recipientAddress.value.trim();
-            const amt = amount.value.trim();
+        // Import wallet
+        function importWallet() {
+            document.getElementById('importForm').style.display = 'block';
+        }
 
-            if (!sender || !recipient || !amt) {
+        // Perform wallet import
+        async function performImport() {
+            const name = document.getElementById('walletName').value;
+            const password = document.getElementById('walletPassword').value;
+            const privateKeyPEM = document.getElementById('privateKeyPEM').value;
+
+            if (!name || !password || !privateKeyPEM) {
                 showNotification('Please fill all fields', 'error');
                 return;
             }
 
-            setLoading(sendTransactionBtn, true);
+            showSpinner('performImportSpinner', true);
+
             try {
-                const result = await wallet.createTransaction(sender, recipient, amt);
-                showResult(transactionResult, JSON.stringify(result, null, 2));
-                showNotification('Transaction sent successfully', 'success');
-            } catch (error) {
-                showResult(transactionResult, `Error: ${error.message}`, true);
-                showNotification('Transaction failed', 'error');
-            } finally {
-                setLoading(sendTransactionBtn, false);
-            }
-        });
+                const response = await fetch(`${blockchainUrl}/wallet/import`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        password,
+                        private_key: privateKeyPEM
+                    })
+                });
 
-        mineBlockBtn.addEventListener('click', async () => {
-            const address = minerAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a miner address', 'error');
-                return;
-            }
+                const data = await response.json();
 
-            setLoading(mineBlockBtn, true);
-            try {
-                const result = await wallet.mineBlock(address);
-                showResult(miningResult, JSON.stringify(result, null, 2));
-                showNotification('Block mined successfully', 'success');
-                await checkBlockchainStatus();
-            } catch (error) {
-                showResult(miningResult, `Error: ${error.message}`, true);
-                showNotification('Mining failed', 'error');
-            } finally {
-                setLoading(mineBlockBtn, false);
-            }
-        });
+                if (data.status === 'success') {
+                    currentWallet = {
+                        address: data.address,
+                        name: data.name,
+                        privateKey: null // Not stored for security
+                    };
 
-        fetchBlockchainBtn.addEventListener('click', async () => {
-            setLoading(fetchBlockchainBtn, true);
-            try {
-                const chain = await wallet.getBlockchain();
-                showResult(blockExplorer, JSON.stringify(chain, null, 2));
-                showNotification('Blockchain data refreshed', 'success');
-            } catch (error) {
-                showResult(blockExplorer, `Error: ${error.message}`, true);
-                showNotification('Failed to fetch blockchain', 'error');
-            } finally {
-                setLoading(fetchBlockchainBtn, false);
-            }
-        });
-
-        fetchTransactionsBtn.addEventListener('click', async () => {
-            const address = historyAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a wallet address', 'error');
-                return;
-            }
-
-            setLoading(fetchTransactionsBtn, true);
-            try {
-                const transactions = await wallet.getAllTransactions();
-                const filteredTransactions = transactions.filter(tx =>
-                    tx.sender === address || tx.recipient === address || tx.miner === address
-                );
-                displayTransactions(filteredTransactions);
-                showNotification(`Found ${filteredTransactions.length} transactions`, 'success');
-            } catch (error) {
-                displayTransactions([]);
-                showNotification('Failed to fetch transactions', 'error');
-            } finally {
-                setLoading(fetchTransactionsBtn, false);
-            }
-        });
-
-        fetchAllTransactionsBtn.addEventListener('click', async () => {
-            setLoading(fetchAllTransactionsBtn, true);
-            try {
-                const transactions = await wallet.getAllTransactions();
-                displayTransactions(transactions);
-                showNotification(`Found ${transactions.length} total transactions`, 'success');
-            } catch (error) {
-                displayTransactions([]);
-                showNotification('Failed to fetch all transactions', 'error');
-            } finally {
-                setLoading(fetchAllTransactionsBtn, false);
-            }
-        });
-
-        function displayTransactions(transactions) {
-            if (transactions.length === 0) {
-                transactionsBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                            No transactions found
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            transactionsBody.innerHTML = transactions.map(tx => {
-                const type = tx.type === 'mining_reward' ? 'Mining Reward' : 'Transfer';
-                const sender = tx.sender || tx.miner || 'System';
-                const recipient = tx.recipient || 'N/A';
-                const amount = tx.amount || tx.reward || 0;
-                const timestamp = tx.timestamp || 'Unknown';
-
-                return `
-                    <tr class="transaction-row">
-                        <td><strong>${tx.blockIndex || 'N/A'}</strong></td>
-                        <td><span class="badge ${type === 'Mining Reward' ? 'success' : 'primary'}">${type}</span></td>
-                        <td><code>${sender}</code></td>
-                        <td><code>${recipient}</code></td>
-                        <td><strong>${amount}</strong></td>
-                        <td>${timestamp}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function checkBlockchainStatus() {
-            try {
-                const info = await wallet.getBlockchainInfo();
-                updateStatus(true);
-                wallet.isConnected = true;
-
-                // Update metrics
-                if (info.chain) {
-                    wallet.metrics.blocks = info.chain.length;
-                    wallet.metrics.transactions = info.chain.reduce((total, block) => {
-                        return total + (block.transactions ? block.transactions.length : 0);
-                    }, 0);
+                    showWalletInfo();
+                    document.getElementById('importForm').style.display = 'none';
+                    showNotification('Wallet imported successfully!', 'success');
+                } else {
+                    showNotification(data.error || 'Failed to import wallet', 'error');
                 }
-                updateMetrics();
-
-                return true;
             } catch (error) {
-                updateStatus(false);
-                wallet.isConnected = false;
-                return false;
+                console.error('Import wallet error:', error);
+                showNotification('Failed to import wallet', 'error');
+            } finally {
+                showSpinner('performImportSpinner', false);
             }
         }
 
-        // Sync wallet address across inputs
-        walletAddress.addEventListener('input', () => {
-            const value = walletAddress.value;
-            senderAddress.value = value;
-            historyAddress.value = value;
-            minerAddress.value = value;
-        });
+        // Show wallet information
+        function showWalletInfo() {
+            document.getElementById('walletInfo').style.display = 'block';
+            document.getElementById('walletActions').style.display = 'none';
+            document.getElementById('currentAddress').textContent = currentWallet.address;
+            updateWalletBalance();
+        }
 
-        // Initialize
-        checkBlockchainStatus();
+        // Update wallet balance
+        async function updateWalletBalance() {
+            if (!currentWallet) return;
 
-        // Auto-refresh status every 30 seconds
-        setInterval(checkBlockchainStatus, 30000);
+            try {
+                const response = await fetch(`${blockchainUrl}/balance/${currentWallet.address}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('currentBalance').textContent = `${data.balance || 0.00} NIL`;
+                }
+            } catch (error) {
+                console.error('Failed to update balance:', error);
+            }
+        }
+
+        // Send transaction
+        async function sendTransaction() {
+            if (!currentWallet) {
+                showNotification('Please create or import a wallet first', 'error');
+                return;
+            }
+
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+
+            if (!recipient || !amount || amount <= 0) {
+                showNotification('Please enter valid recipient and amount', 'error');
+                return;
+            }
+
+            showSpinner('sendSpinner', true);
+
+            try {
+                const response = await fetch(`${blockchainUrl}/transaction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender: currentWallet.address,
+                        recipient: recipient,
+                        amount: amount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showNotification('Transaction sent successfully!', 'success');
+                    document.getElementById('recipientAddress').value = '';
+                    document.getElementById('transactionAmount').value = '';
+                    updateWalletBalance();
+                } else {
+                    showNotification(data.error || 'Failed to send transaction', 'error');
+                }
+            } catch (error) {
+                console.error('Send transaction error:', error);
+                showNotification('Failed to send transaction', 'error');
+            } finally {
+                showSpinner('sendSpinner', false);
+            }
+        }
+
+        // Start mining
+        async function startMining() {
+            if (!currentWallet) {
+                showNotification('Please create or import a wallet first', 'error');
+                return;
+            }
+
+            showSpinner('startMiningSpinner', true);
+
+            try {
+                const response = await fetch(`${blockchainUrl}/mining/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        miner_address: currentWallet.address
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showNotification('Mining started!', 'success');
+                    updateNetworkStatus();
+                } else {
+                    showNotification(data.error || 'Failed to start mining', 'error');
+                }
+            } catch (error) {
+                console.error('Start mining error:', error);
+                showNotification('Failed to start mining', 'error');
+            } finally {
+                showSpinner('startMiningSpinner', false);
+            }
+        }
+
+        // Stop mining
+        async function stopMining() {
+            showSpinner('stopMiningSpinner', true);
+
+            try {
+                const response = await fetch(`${blockchainUrl}/mining/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showNotification('Mining stopped!', 'success');
+                    updateNetworkStatus();
+                } else {
+                    showNotification(data.error || 'Failed to stop mining', 'error');
+                }
+            } catch (error) {
+                console.error('Stop mining error:', error);
+                showNotification('Failed to stop mining', 'error');
+            } finally {
+                showSpinner('stopMiningSpinner', false);
+            }
+        }
+
+        // Refresh network status
+        async function refreshNetworkStatus() {
+            showSpinner('networkSpinner', true);
+            await updateNetworkStatus();
+            showSpinner('networkSpinner', false);
+        }
+
+        // Utility functions
+        function showSpinner(spinnerId, show) {
+            const spinner = document.getElementById(spinnerId);
+            if (spinner) {
+                spinner.style.display = show ? 'inline-block' : 'none';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            container.appendChild(notification);
+
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Remove notification after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 5000);
+        }
     </script>
 </body>
+
+</html>
 
 </html>

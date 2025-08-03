@@ -1,135 +1,276 @@
-# Nilotic Blockchain Wallet Applications
+# Nilotic Blockchain Web Wallet
 
-This directory contains wallet applications that interface with the Nilotic Blockchain. These applications demonstrate how third-party tools can connect to and interact with the blockchain through its API.
+A comprehensive, production-ready web wallet interface for the Nilotic Blockchain platform. This wallet provides a modern, secure interface for managing blockchain operations including wallet creation, transactions, mining, and network monitoring.
 
-## Web Wallet
+## 🚀 Features
 
-The web wallet (`index.html`) provides a browser-based interface for interacting with the Nilotic Blockchain. It's a single HTML file with embedded JavaScript and CSS, making it easy to deploy and use.
+### Core Wallet Functionality
+- **Wallet Creation**: Create new wallets with secure key generation
+- **Wallet Import**: Import existing wallets using private keys
+- **Transaction Management**: Send and receive NIL tokens
+- **Balance Tracking**: Real-time balance monitoring
+- **Address Management**: Secure address generation and storage
 
-### Features:
-- View wallet balance
-- Send transactions
-- Mine new blocks
-- View transaction history
-- Explore the blockchain
+### Mining Operations
+- **Mining Controls**: Start and stop mining operations
+- **Mining Status**: Real-time mining status monitoring
+- **Hash Rate Display**: Current mining performance metrics
+- **Difficulty Tracking**: Dynamic difficulty adjustment monitoring
 
-### Usage:
-1. Make sure the Nilotic Blockchain is running (default: http://localhost:5500)
-2. Open `index.html` in a web browser
-3. The wallet will automatically connect to the blockchain
-4. Use the tabs to navigate between different functions
+### Network Management
+- **Network Status**: Monitor P2P network health
+- **Peer Management**: View active connections and peers
+- **Message Tracking**: Monitor network message flow
+- **Connection Status**: Real-time network connectivity
 
-## Command-Line Wallet
+### Advanced Features
+- **Token Creation**: Create OderoSLW tokens
+- **Smart Contract Deployment**: Deploy and interact with smart contracts
+- **Real-time Updates**: Live blockchain data synchronization
+- **Responsive Design**: Mobile-friendly interface
 
-The command-line wallet (`nilotic_wallet.py`) provides a Python-based interface for interacting with the Nilotic Blockchain from the terminal.
+## 📁 File Structure
 
-### Features:
-- Get blockchain info
-- Check wallet balance
-- Send transactions
-- Mine blocks
-- View blockchain data
-- List transactions for an address
-
-### Requirements:
-- Python 3.6+
-- requests library (`pip install requests`)
-
-### Usage:
-
-```bash
-# Make executable
-chmod +x nilotic_wallet.py
-
-# Get help
-./nilotic_wallet.py --help
-
-# Set blockchain URL and default wallet address
-./nilotic_wallet.py --url http://localhost:5500 --address my_wallet_address info
-
-# Get balance
-./nilotic_wallet.py --address my_wallet_address balance
-
-# Send a transaction
-./nilotic_wallet.py --address my_wallet_address send recipient_address 10.5
-
-# Mine a block
-./nilotic_wallet.py --address my_wallet_address mine
-
-# Get all transactions for an address
-./nilotic_wallet.py --address my_wallet_address transactions
+```
+web/wallet/
+├── index.html              # Main wallet interface
+├── enhanced_wallet.html    # Advanced wallet with all features
+├── dapp_sdk.js            # Blockchain SDK for dApp development
+├── dapp_template.html     # Template for dApp development
+├── optimized_wallet.html  # Performance-optimized wallet
+├── README.md              # This documentation
+├── requirements.txt       # Python dependencies (if using Python backend)
+└── nilotic_wallet.py     # Python wallet backend (optional)
 ```
 
-## Test Scripts
+## 🔧 API Compatibility
 
-The root directory contains several test scripts that can be used to test the functionality of the Nilotic Blockchain and the wallet integration:
+The web wallet is fully compatible with the Nilotic Blockchain API endpoints:
 
-### `test_nilotic_blockchain.sh`
+### Core Endpoints
+- `GET /info` - Blockchain information
+- `GET /balance/{address}` - Wallet balance
+- `POST /transaction` - Send transaction
+- `GET /block/latest` - Latest block information
+- `GET /block/{index}` - Block by index
 
-This script tests the basic blockchain functionality, including balance checks, transactions, and mining.
+### Wallet Endpoints
+- `POST /wallet/create` - Create new wallet
+- `POST /wallet/import` - Import existing wallet
+- `POST /wallet/sign` - Sign transaction
 
+### Mining Endpoints
+- `GET /mining/status` - Mining status
+- `POST /mining/start` - Start mining
+- `POST /mining/stop` - Stop mining
+
+### Network Endpoints
+- `GET /network/status` - Network status
+- `GET /network/peers` - Peer list
+- `POST /network/connect` - Connect to peer
+- `POST /network/disconnect` - Disconnect from peer
+
+### Token Endpoints
+- `POST /token` - Create OderoSLW token
+
+## 🚀 Quick Start
+
+### 1. Start the Blockchain
 ```bash
-# Run with default URL (http://localhost:5500)
-./test_nilotic_blockchain.sh
-
-# Run with custom URL
-./test_nilotic_blockchain.sh http://your-blockchain-host:port
+cd nilotic-blockchain-clean
+./build.sh
+cd build
+./nilotic_blockchain --port 5010 --debug
 ```
 
-### `test_odero_slw.sh`
-
-This script tests the Odero SLW token functionality, including creation, verification, and redemption.
-
-```bash
-# Run with default URL (http://localhost:5500)
-./test_odero_slw.sh
-
-# Run with custom URL
-./test_odero_slw.sh http://your-blockchain-host:port
-```
-
-### `test_wallet.cpp`
-
-This is a C++ example that demonstrates how to create a wallet application that connects to the Nilotic Blockchain. It includes:
-
-- Basic wallet functionality (balance checking, transactions, mining)
-- Transaction tracking
-- Error handling
-
-To build and run:
+### 2. Open the Web Wallet
+Open `index.html` in your web browser or serve it using a local server:
 
 ```bash
-g++ -std=c++17 -o test_wallet test_wallet.cpp
-./test_wallet
+# Using Python
+python -m http.server 8080
+
+# Using Node.js
+npx serve .
+
+# Using PHP
+php -S localhost:8080
 ```
 
-## Connecting to Your Local Blockchain
+### 3. Connect to Blockchain
+The wallet will automatically attempt to connect to `http://localhost:5010`. Ensure the blockchain is running on this port.
 
-By default, both wallet applications connect to `http://localhost:5500`. If your blockchain is running on a different host or port, you can change this:
+## 💻 Usage Guide
 
-- **Web Wallet**: Edit the `apiUrl` parameter in the `BlockchainWallet` constructor in the JavaScript code.
-- **CLI Wallet**: Use the `--url` command-line parameter.
-- **Test Scripts**: Pass the URL as a command-line argument.
+### Creating a Wallet
+1. Enter a wallet name and password
+2. Click "Create Wallet"
+3. The wallet address will be displayed
+4. Store your private key securely (not shown in interface for security)
 
-## Security Considerations
+### Importing a Wallet
+1. Enter wallet name and password
+2. Click "Import Wallet"
+3. Paste your private key in PEM format
+4. Click "Import"
 
-These wallet applications are for demonstration purposes and lack several security features needed for a production environment:
+### Sending Transactions
+1. Ensure you have a wallet loaded
+2. Enter recipient address
+3. Enter amount in NIL
+4. Click "Send Transaction"
 
-1. **No Encryption**: Private keys and sensitive data are not encrypted
-2. **No Authentication**: The applications do not implement user authentication
-3. **No Signature Verification**: Transactions are not cryptographically signed
-4. **No Input Validation**: Limited validation of user inputs
+### Mining Operations
+1. Load a wallet (required for mining)
+2. Click "Start Mining" to begin
+3. Monitor hash rate and difficulty
+4. Click "Stop Mining" to halt
 
-## Extending the Wallets
+### Network Monitoring
+- View active connections and peers
+- Monitor message flow
+- Check network health status
+- Refresh network data manually
 
-These wallets can be extended with additional features:
+## 🔒 Security Features
 
-1. **Key Management**: Add support for generating and managing cryptographic keys
-2. **Transaction Signing**: Implement digital signatures for transactions
-3. **Mnemonic Phrases**: Add support for BIP39 mnemonic seed phrases
-4. **Address Book**: Store frequently used addresses
-5. **Transaction Metadata**: Add support for attaching metadata to transactions
-6. **Offline Signing**: Enable signing transactions in an offline environment
-7. **Multi-signature Support**: Implement multi-signature transactions
-8. **Mobile Applications**: Create mobile wallet apps using frameworks like React Native or Flutter
-9. **Desktop Applications**: Create desktop wallet apps using frameworks like Electron
+### Client-Side Security
+- Private keys are never stored in the interface
+- All sensitive operations use secure APIs
+- Password-based wallet encryption
+- Secure transaction signing
+
+### Network Security
+- HTTPS-ready (configure for production)
+- CORS headers for cross-origin requests
+- Input validation and sanitization
+- Error handling and logging
+
+## 🛠️ Development
+
+### SDK Usage
+The wallet includes a comprehensive SDK for dApp development:
+
+```javascript
+// Initialize the SDK
+const dapp = new NiloticDApp('http://localhost:5010');
+
+// Connect to blockchain
+await dapp.connect();
+
+// Create wallet
+const wallet = await dapp.createWallet('MyWallet', 'password123');
+
+// Send transaction
+await dapp.sendTransaction('recipient_address', 10.5);
+
+// Start mining
+await dapp.startMining(wallet.address);
+
+// Get network status
+const networkStatus = await dapp.getNetworkStatus();
+```
+
+### Customization
+The wallet interface can be customized by modifying:
+- CSS variables in the `:root` selector
+- API endpoints in the JavaScript code
+- UI components and layouts
+- Color schemes and themes
+
+## 📱 Responsive Design
+
+The wallet is fully responsive and works on:
+- Desktop computers
+- Tablets
+- Mobile phones
+- Various screen sizes and orientations
+
+## 🔧 Configuration
+
+### API Endpoint
+Change the blockchain URL by modifying:
+```javascript
+let blockchainUrl = 'http://localhost:5010';
+```
+
+### Update Intervals
+Adjust real-time update intervals:
+```javascript
+setInterval(updateNetworkStatus, 10000); // 10 seconds
+```
+
+### Notification Duration
+Modify notification display time:
+```javascript
+setTimeout(() => {
+    // Remove notification
+}, 5000); // 5 seconds
+```
+
+## 🚀 Production Deployment
+
+### Security Considerations
+1. Use HTTPS in production
+2. Implement proper CORS policies
+3. Add rate limiting
+4. Enable secure headers
+5. Use environment variables for configuration
+
+### Performance Optimization
+1. Minify CSS and JavaScript
+2. Enable gzip compression
+3. Use CDN for external resources
+4. Implement caching strategies
+5. Optimize images and assets
+
+### Monitoring
+1. Add error tracking (e.g., Sentry)
+2. Implement analytics
+3. Monitor API response times
+4. Track user interactions
+5. Log security events
+
+## 🐛 Troubleshooting
+
+### Connection Issues
+- Ensure blockchain is running on correct port
+- Check firewall settings
+- Verify CORS configuration
+- Check browser console for errors
+
+### Transaction Failures
+- Verify wallet has sufficient balance
+- Check recipient address format
+- Ensure network connectivity
+- Review transaction parameters
+
+### Mining Issues
+- Confirm wallet is loaded
+- Check mining difficulty
+- Verify network connectivity
+- Monitor system resources
+
+## 📄 License
+
+This project is part of the Nilotic Blockchain platform. See the main project license for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📞 Support
+
+For support and questions:
+- Check the main project documentation
+- Review API documentation
+- Test with the provided examples
+- Report issues through the project repository
+
+---
+
+**Note**: This web wallet is designed for the Nilotic Blockchain platform and may not be compatible with other blockchain networks without modification.

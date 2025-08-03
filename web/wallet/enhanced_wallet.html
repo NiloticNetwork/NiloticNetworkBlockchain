@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced Nilotic Blockchain Wallet</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -46,7 +45,6 @@
             padding: 20px;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -70,7 +68,6 @@
             font-weight: 300;
         }
 
-        /* Status Bar */
         .status-bar {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -98,10 +95,6 @@
             animation: pulse 2s infinite;
         }
 
-        .status-dot.offline {
-            background: #f87171;
-        }
-
         @keyframes pulse {
 
             0%,
@@ -114,268 +107,350 @@
             }
         }
 
-        /* Dashboard Grid */
-        .dashboard {
+        .status-text {
+            font-weight: 600;
+        }
+
+        .network-info {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .feature-status {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+        }
+
+        .feature-item {
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-item.available {
+            background: rgba(34, 197, 94, 0.2);
+            color: #059669;
+        }
+
+        .feature-item.unavailable {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .main-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 25px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
             margin-bottom: 30px;
         }
 
-        /* Cards */
         .card {
-            background: var(--bg-primary);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             padding: 30px;
             box-shadow: var(--shadow-lg);
-            transition: var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .card-icon.wallet {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        }
-
-        .card-icon.transaction {
-            background: linear-gradient(135deg, var(--success-color), #00f2fe);
-        }
-
-        .card-icon.mining {
-            background: linear-gradient(135deg, var(--warning-color), var(--error-color));
-        }
-
-        .card-icon.explorer {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .card-icon.contract {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-        }
-
-        .card-title {
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
         }
 
-        .card-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-
-        /* Form Elements */
         .form-group {
             margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
-            font-weight: 600;
             margin-bottom: 8px;
+            font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.95rem;
         }
 
         .form-input {
             width: 100%;
-            padding: 15px 20px;
+            padding: 12px 16px;
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             transition: var(--transition);
-            background: var(--bg-secondary);
+            background: white;
         }
 
         .form-input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            background: white;
         }
 
-        .form-input::placeholder {
-            color: var(--text-secondary);
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
         }
 
-        /* Buttons */
         .btn {
-            padding: 15px 30px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
+            gap: 8px;
         }
 
         .btn-primary {
-            background: var(--bg-gradient);
+            background: var(--primary-color);
             color: white;
         }
 
         .btn-primary:hover {
+            background: #5a67d8;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: var(--secondary-color);
             color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #6b46c1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: var(--success-color);
             color: white;
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
+        .btn-success:hover {
+            background: #38b2ac;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        /* Loading Animation */
-        .loading {
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #ed8936;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .wallet-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .wallet-address-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .balance-display {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .balance-refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .balance-refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(180deg);
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .toggle-switch {
+            position: relative;
             display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: var(--transition);
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .mining-status {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .mining-status.active {
+            background: rgba(74, 222, 128, 0.2);
+            color: #059669;
+        }
+
+        .mining-status.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .mining-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .spinner {
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, .3);
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            to {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
                 transform: rotate(360deg);
             }
         }
 
-        /* Results */
-        .result-area {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            border-radius: 10px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        th {
-            background: var(--bg-secondary);
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        /* Metrics Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .metric-card {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Notifications */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 20px 25px;
-            border-radius: 10px;
+            padding: 15px 20px;
+            border-radius: 8px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 1000;
-            transform: translateX(400px);
-            transition: var(--transition);
-            max-width: 400px;
-            box-shadow: var(--shadow-lg);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
         }
 
         .notification.show {
@@ -383,86 +458,236 @@
         }
 
         .notification.success {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            background: var(--success-color);
         }
 
         .notification.error {
-            background: linear-gradient(135deg, #f87171, #ef4444);
+            background: var(--error-color);
+        }
+
+        .notification.warning {
+            background: var(--warning-color);
         }
 
         .notification.info {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            background: var(--primary-color);
         }
 
-        /* Responsive Design */
+        .last-updated {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .transaction-summary {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .transaction-summary h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            padding-top: 8px;
+        }
+
+        .transaction-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .transaction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .tx-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .tx-type.sent {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .tx-type.received {
+            background: rgba(34, 197, 94, 0.2);
+            color: #059669;
+        }
+
+        .tx-type.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #d97706;
+        }
+
+        .tx-details {
+            flex: 1;
+        }
+
+        .tx-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .tx-recipient {
+            font-weight: 600;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .tx-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .tx-fee {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .tx-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+
+        .tx-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .tx-status.confirmed {
+            color: #059669;
+        }
+
+        .tx-status.pending {
+            color: #d97706;
+        }
+
+        .tx-status.failed {
+            color: #dc2626;
+        }
+
+        .tx-timestamp {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .no-transactions {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .transaction-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .qr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .qr-placeholder {
+            color: #888;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .qr-info {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+            .transaction-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
             }
 
             .header h1 {
                 font-size: 2rem;
             }
 
-            .dashboard {
-                grid-template-columns: 1fr;
+            .network-info {
+                flex-direction: column;
+                gap: 10px;
             }
 
-            .card {
-                padding: 20px;
+            .mining-controls {
+                flex-direction: column;
             }
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
         }
     </style>
 </head>
@@ -471,746 +696,1403 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1><i class="fas fa-coins"></i> Enhanced Nilotic Blockchain</h1>
-            <p>Smart Contracts • Realistic Addresses • Performance Metrics</p>
+            <h1>Enhanced Nilotic Blockchain Wallet</h1>
+            <p>Complete Blockchain Management Interface with Data Persistence</p>
         </div>
 
         <!-- Status Bar -->
         <div class="status-bar">
             <div class="status-indicator">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="status-text">Connecting to blockchain...</span>
+                <div class="status-dot"></div>
+                <span class="status-text" id="connectionStatus">Connecting...</span>
             </div>
-            <div class="status-metrics">
-                <span id="block-count">Blocks: 0</span> |
-                <span id="transaction-count">Txs: 0</span> |
-                <span id="contract-count">Contracts: 0</span> |
-                <span id="response-time">Latency: 0ms</span>
+            <div class="network-info">
+                <span id="chainHeight">Height: --</span>
+                <span id="pendingTx">Pending: --</span>
+                <span id="difficulty">Difficulty: --</span>
+            </div>
+            <div class="feature-status" id="featureStatus" style="display: none;">
+                <span class="feature-item" id="transactionsFeature">TX: ❓</span>
+                <span class="feature-item" id="walletsFeature">Wallet: ❓</span>
+                <span class="feature-item" id="miningFeature">Mining: ❓</span>
             </div>
         </div>
 
-        <!-- Dashboard -->
-        <div class="dashboard">
-            <!-- Wallet Card -->
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Wallet Management -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon wallet">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Wallet</div>
-                        <div class="card-subtitle">Manage your funds</div>
+                <h2>Wallet Management</h2>
+
+                <div id="walletInfo" style="display: none;">
+                    <div class="wallet-info">
+                        <h3>Current Wallet</h3>
+                        <div class="wallet-address-container">
+                            <div class="wallet-address" id="currentAddress">Loading...</div>
+                            <button class="copy-btn" onclick="copyAddress()" title="Copy Address">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                        <div class="balance-display">
+                            <span id="currentBalance">0.00 NIL</span>
+                            <button class="balance-refresh-btn" onclick="refreshBalance()" title="Refresh Balance">
+                                <span style="font-size: 14px;">↻</span>
+                            </button>
+                        </div>
+                        <div class="qr-section">
+                            <div class="qr-code" id="qrCode">
+                                <div class="qr-placeholder">QR Code</div>
+                            </div>
+                            <div class="qr-info">
+                                <p>Scan this QR code to receive NIL</p>
+                                <button class="btn btn-secondary" onclick="showReceiveModal()">
+                                    Receive Transaction
+                                </button>
+                            </div>
+                        </div>
+                        <div class="auto-refresh-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoRefreshToggle">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Auto-refresh balance (30s)</span>
+                        </div>
+                        <div class="last-updated" id="lastUpdated">Last updated: Never</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Wallet Address</label>
-                    <input type="text" class="form-input" id="wallet-address" placeholder="Enter your wallet address"
-                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                <div id="walletActions">
+                    <div class="form-group">
+                        <label class="form-label">Wallet Name</label>
+                        <input type="text" class="form-input" id="walletName" placeholder="Enter wallet name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="walletPassword" placeholder="Enter password">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="createWallet()">
+                            <span class="spinner" id="createSpinner" style="display: none;"></span>
+                            Create Wallet
+                        </button>
+                        <button class="btn btn-secondary" onclick="importWallet()">
+                            <span class="spinner" id="importSpinner" style="display: none;"></span>
+                            Import Wallet
+                        </button>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary" id="check-balance">
-                    <i class="fas fa-balance-scale"></i>
-                    <span class="btn-text">Check Balance</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="balance-result" class="result-area" style="display: none;">
-                    Balance information will appear here
+                <div id="importForm" style="display: none; margin-top: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Private Key (PEM)</label>
+                        <textarea class="form-input form-textarea" id="privateKeyPEM"
+                            placeholder="Paste your private key in PEM format"></textarea>
+                    </div>
+                    <button class="btn btn-success" onclick="performImport()">
+                        <span class="spinner" id="performImportSpinner" style="display: none;"></span>
+                        Import
+                    </button>
                 </div>
             </div>
 
-            <!-- Transaction Card -->
+            <!-- Send Transaction -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-icon transaction">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Send Transaction</div>
-                        <div class="card-subtitle">Transfer funds securely</div>
-                    </div>
+                <h2>Send Transaction</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Recipient Address</label>
+                    <input type="text" class="form-input" id="recipientAddress" placeholder="Enter recipient address">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">From Address</label>
-                    <input type="text" class="form-input" id="sender-address" placeholder="Enter sender address"
-                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                    <label class="form-label">Amount (NIL)</label>
+                    <input type="number" class="form-input" id="transactionAmount" placeholder="0.00" step="0.01"
+                        min="0">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">To Address</label>
-                    <input type="text" class="form-input" id="recipient-address" placeholder="Enter recipient address"
-                        value="0x8ba1f109551bD432803012645Hac136c772c3c7b">
+                    <label class="form-label">Transaction Fee (NIL)</label>
+                    <input type="number" class="form-input" id="transactionFee" placeholder="0.001" step="0.001"
+                        min="0.001" value="0.001">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Message (Optional)</label>
+                    <textarea class="form-input form-textarea" id="transactionMessage"
+                        placeholder="Add a message to your transaction" rows="2"></textarea>
+                </div>
+
+                <div class="transaction-summary" id="transactionSummary" style="display: none;">
+                    <h4>Transaction Summary</h4>
+                    <div class="summary-item">
+                        <span>Recipient:</span>
+                        <span id="summaryRecipient"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Amount:</span>
+                        <span id="summaryAmount"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Fee:</span>
+                        <span id="summaryFee"></span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Total:</span>
+                        <span id="summaryTotal"></span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="sendTransaction()" id="sendBtn">
+                        <span class="spinner" id="sendSpinner" style="display: none;"></span>
+                        Send Transaction
+                    </button>
+                    <button class="btn btn-secondary" onclick="testBlockchainConnection()"
+                        title="Test blockchain connection">
+                        Test Connection
+                    </button>
+                    <button class="btn btn-warning" onclick="debugBlockchainStatus()" title="Debug blockchain status">
+                        Debug
+                    </button>
+                    <button class="btn btn-success" onclick="sendTestTransaction()" title="Send a test transaction">
+                        Test TX
+                    </button>
+                    <button class="btn btn-info" onclick="debugWalletConnection()" title="Debug wallet connection">
+                        Debug Wallet
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="card">
+                <h2>Transaction History</h2>
+
+                <div class="transaction-filters">
+                    <select class="form-input" id="transactionFilter" style="width: auto;">
+                        <option value="all">All Transactions</option>
+                        <option value="sent">Sent</option>
+                        <option value="received">Received</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="refreshTransactionHistory()">
+                        <span class="spinner" id="historySpinner" style="display: none;"></span>
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="transaction-list" id="transactionList">
+                    <div class="no-transactions">No transactions found</div>
+                </div>
+            </div>
+
+            <!-- Mining Controls -->
+            <div class="card">
+                <h2>Mining Controls</h2>
+
+                <div class="mining-status" id="miningStatus">
+                    <span id="miningStatusText">Inactive</span>
+                </div>
+
+                <div class="mining-controls">
+                    <button class="btn btn-success" onclick="startMining()" id="startMiningBtn">
+                        <span class="spinner" id="startMiningSpinner" style="display: none;"></span>
+                        Start Mining
+                    </button>
+                    <button class="btn btn-warning" onclick="stopMining()" id="stopMiningBtn">
+                        <span class="spinner" id="stopMiningSpinner" style="display: none;"></span>
+                        Stop Mining
+                    </button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="hashRate">0</div>
+                        <div class="stat-label">Hash Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="currentDifficulty">4</div>
+                        <div class="stat-label">Difficulty</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Features Grid -->
+        <div class="main-grid">
+            <!-- Network Status -->
+            <div class="card">
+                <h2>Network Status</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeConnections">0</div>
+                        <div class="stat-label">Active Connections</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPeers">0</div>
+                        <div class="stat-label">Total Peers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="messagesReceived">0</div>
+                        <div class="stat-label">Messages Received</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="messagesSent">0</div>
+                        <div class="stat-label">Messages Sent</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="refreshNetworkStatus()">
+                        <span class="spinner" id="networkSpinner" style="display: none;"></span>
+                        Refresh Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Token Creation -->
+            <div class="card">
+                <h2>Token Creation (OderoSLW)</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Token ID</label>
+                    <input type="text" class="form-input" id="tokenId" placeholder="Enter token ID">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Amount</label>
-                    <input type="number" class="form-input" id="amount" placeholder="Enter amount to send" min="0.1"
-                        step="0.1" value="50">
-                </div>
-
-                <button class="btn btn-primary" id="send-transaction">
-                    <i class="fas fa-paper-plane"></i>
-                    <span class="btn-text">Send Transaction</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="transaction-result" class="result-area" style="display: none;">
-                    Transaction result will appear here
-                </div>
-            </div>
-
-            <!-- Smart Contract Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon contract">
-                        <i class="fas fa-file-contract"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Smart Contract</div>
-                        <div class="card-subtitle">Deploy and interact with contracts</div>
-                    </div>
+                    <input type="number" class="form-input" id="tokenAmount" placeholder="0.00" step="0.01" min="0">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Contract Owner</label>
-                    <input type="text" class="form-input" id="contract-owner" placeholder="Enter contract owner address"
-                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                    <label class="form-label">Creator Address</label>
+                    <input type="text" class="form-input" id="creatorAddress" placeholder="Enter creator address">
                 </div>
+
+                <button class="btn btn-primary" onclick="createToken()">
+                    <span class="spinner" id="tokenSpinner" style="display: none;"></span>
+                    Create Token
+                </button>
+            </div>
+
+            <!-- Smart Contract -->
+            <div class="card">
+                <h2>Smart Contract</h2>
 
                 <div class="form-group">
                     <label class="form-label">Contract Code</label>
-                    <textarea class="form-input" id="contract-code" rows="4" placeholder="Enter smart contract code">contract Test {
-    function hello() public returns (string) {
-        return "Hello World";
-    }
-}</textarea>
-                </div>
-
-                <button class="btn btn-secondary" id="deploy-contract">
-                    <i class="fas fa-upload"></i>
-                    <span class="btn-text">Deploy Contract</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-
-                <div id="contract-result" class="result-area" style="display: none;">
-                    Contract deployment result will appear here
-                </div>
-            </div>
-
-            <!-- Mining Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon mining">
-                        <i class="fas fa-hammer"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">Mine Blocks</div>
-                        <div class="card-subtitle">Contribute to the network</div>
-                    </div>
+                    <textarea class="form-input form-textarea" id="contractCode"
+                        placeholder="Enter smart contract code"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Miner Address</label>
-                    <input type="text" class="form-input" id="miner-address" placeholder="Enter miner address"
-                        value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
+                    <label class="form-label">Constructor Arguments (JSON)</label>
+                    <input type="text" class="form-input" id="constructorArgs" placeholder='["arg1", "arg2"]'>
                 </div>
 
-                <button class="btn btn-success" id="mine-block">
-                    <i class="fas fa-cog"></i>
-                    <span class="btn-text">Mine Block</span>
-                    <div class="loading" style="display: none;"></div>
+                <button class="btn btn-success" onclick="deployContract()">
+                    <span class="spinner" id="deploySpinner" style="display: none;"></span>
+                    Deploy Contract
                 </button>
-
-                <div id="mining-result" class="result-area" style="display: none;">
-                    Mining result will appear here
-                </div>
-            </div>
-        </div>
-
-        <!-- Performance Metrics -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-icon explorer">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div>
-                    <div class="card-title">Performance Metrics</div>
-                    <div class="card-subtitle">Real-time blockchain performance</div>
-                </div>
-            </div>
-
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value" id="total-transactions">0</div>
-                    <div class="metric-label">Total Transactions</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="total-blocks">0</div>
-                    <div class="metric-label">Total Blocks</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="total-contracts">0</div>
-                    <div class="metric-label">Total Contracts</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="tps">0</div>
-                    <div class="metric-label">TPS</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="uptime">0s</div>
-                    <div class="metric-label">Uptime</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="avg-response">0ms</div>
-                    <div class="metric-label">Avg Response</div>
-                </div>
-            </div>
-
-            <button class="btn btn-primary" id="refresh-metrics">
-                <i class="fas fa-sync-alt"></i>
-                <span class="btn-text">Refresh Metrics</span>
-                <div class="loading" style="display: none;"></div>
-            </button>
-        </div>
-
-        <!-- Transaction History -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-icon transaction">
-                    <i class="fas fa-history"></i>
-                </div>
-                <div>
-                    <div class="card-title">Transaction History</div>
-                    <div class="card-subtitle">View your transaction history</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Wallet Address (optional)</label>
-                <input type="text" class="form-input" id="history-address"
-                    placeholder="Enter wallet address to filter transactions"
-                    value="0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6">
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-primary" id="fetch-transactions">
-                    <i class="fas fa-list"></i>
-                    <span class="btn-text">Fetch My Transactions</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-                <button class="btn btn-secondary" id="fetch-all-transactions">
-                    <i class="fas fa-globe"></i>
-                    <span class="btn-text">Fetch All Transactions</span>
-                    <div class="loading" style="display: none;"></div>
-                </button>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag"></i> Block</th>
-                            <th><i class="fas fa-tag"></i> Type</th>
-                            <th><i class="fas fa-user"></i> From</th>
-                            <th><i class="fas fa-user-check"></i> To</th>
-                            <th><i class="fas fa-coins"></i> Amount</th>
-                            <th><i class="fas fa-clock"></i> Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-body">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                                <i class="fas fa-inbox"
-                                    style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                                No transactions found
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
     <!-- Notification Container -->
-    <div id="notification-container"></div>
+    <div id="notificationContainer"></div>
 
+    <script src="dapp_sdk.js"></script>
     <script>
-        class EnhancedBlockchainWallet {
-            constructor(apiUrl = 'http://localhost:5500') {
-                this.apiUrl = apiUrl;
-                this.isConnected = false;
-                this.metrics = {
-                    totalTransactions: 0,
-                    totalBlocks: 0,
-                    totalContracts: 0,
-                    tps: 0,
-                    uptime: 0,
-                    avgResponse: 0
-                };
-            }
+        // Global variables
+        let currentWallet = null;
+        let blockchainUrl = 'http://localhost:5500';
+        let isConnected = false;
+        let dapp = new NiloticDApp(blockchainUrl);
+        let autoRefreshInterval = null;
+        let balanceRefreshInterval = null;
 
-            async getBlockchainInfo() {
-                const startTime = Date.now();
-                try {
-                    const response = await fetch(`${this.apiUrl}/`);
-                    const data = await response.json();
-                    this.metrics.avgResponse = Date.now() - startTime;
-                    return data;
-                } catch (error) {
-                    throw new Error(`Failed to get blockchain info: ${error.message}`);
-                }
-            }
-
-            async getBalance(address) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/balance?address=${encodeURIComponent(address)}`);
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to get balance: ${error.message}`);
-                }
-            }
-
-            async createTransaction(sender, recipient, amount) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/transaction`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ sender, recipient, amount: parseFloat(amount) })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to create transaction: ${error.message}`);
-                }
-            }
-
-            async deployContract(owner, contractCode) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/transaction`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'contract_deployment',
-                            sender: owner,
-                            contractCode: contractCode
-                        })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to deploy contract: ${error.message}`);
-                }
-            }
-
-            async callContract(contractAddress, caller, functionName, args = []) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/transaction`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'contract_call',
-                            sender: caller,
-                            contractAddress: contractAddress,
-                            functionName: functionName,
-                            args: args
-                        })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to call contract: ${error.message}`);
-                }
-            }
-
-            async mineBlock(address) {
-                try {
-                    const response = await fetch(`${this.apiUrl}/mine`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address })
-                    });
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to mine block: ${error.message}`);
-                }
-            }
-
-            async getBlockchain() {
-                try {
-                    const response = await fetch(`${this.apiUrl}/chain`);
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to get blockchain: ${error.message}`);
-                }
-            }
-
-            async getMetrics() {
-                try {
-                    const response = await fetch(`${this.apiUrl}/metrics`);
-                    return await response.json();
-                } catch (error) {
-                    throw new Error(`Failed to get metrics: ${error.message}`);
-                }
-            }
-
-            async getAllTransactions() {
-                try {
-                    const chain = await this.getBlockchain();
-                    const transactions = [];
-
-                    chain.chain.forEach((block, blockIndex) => {
-                        try {
-                            if (block.data && typeof block.data === 'string' && block.data !== 'Genesis Block') {
-                                const data = JSON.parse(block.data);
-                                if (data.type === 'transaction' || data.type === 'mining_reward' ||
-                                    data.type === 'contract_deployment' || data.type === 'contract_call') {
-                                    transactions.push({
-                                        blockIndex: blockIndex,
-                                        blockHash: block.hash,
-                                        ...data
-                                    });
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Error parsing block data:', err);
-                        }
-                    });
-
-                    return transactions;
-                } catch (error) {
-                    throw new Error(`Failed to get transactions: ${error.message}`);
-                }
-            }
-        }
+        // Storage keys
+        const STORAGE_KEYS = {
+            WALLET_DATA: 'nilotic_wallet_data',
+            SETTINGS: 'nilotic_wallet_settings',
+            LAST_BALANCE: 'nilotic_wallet_last_balance',
+            LAST_UPDATE: 'nilotic_wallet_last_update'
+        };
 
         // Initialize the wallet
-        const wallet = new EnhancedBlockchainWallet();
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeWallet();
+            loadSavedData();
+            updateNetworkStatus();
+            setInterval(updateNetworkStatus, 10000);
 
-        // DOM elements
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
-        const blockCount = document.getElementById('block-count');
-        const transactionCount = document.getElementById('transaction-count');
-        const contractCount = document.getElementById('contract-count');
-        const responseTime = document.getElementById('response-time');
+            // Setup auto-refresh toggle
+            const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+            autoRefreshToggle.addEventListener('change', function () {
+                toggleAutoRefresh(this.checked);
+            });
 
-        // Wallet elements
-        const walletAddress = document.getElementById('wallet-address');
-        const checkBalanceBtn = document.getElementById('check-balance');
-        const balanceResult = document.getElementById('balance-result');
+            // Setup transaction form listeners
+            setupTransactionFormListeners();
+        });
 
-        // Transaction elements
-        const senderAddress = document.getElementById('sender-address');
-        const recipientAddress = document.getElementById('recipient-address');
-        const amount = document.getElementById('amount');
-        const sendTransactionBtn = document.getElementById('send-transaction');
-        const transactionResult = document.getElementById('transaction-result');
+        // Load saved data from localStorage
+        function loadSavedData() {
+            try {
+                const savedWallet = localStorage.getItem(STORAGE_KEYS.WALLET_DATA);
+                const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
 
-        // Contract elements
-        const contractOwner = document.getElementById('contract-owner');
-        const contractCode = document.getElementById('contract-code');
-        const deployContractBtn = document.getElementById('deploy-contract');
-        const contractResult = document.getElementById('contract-result');
+                if (savedWallet) {
+                    currentWallet = JSON.parse(savedWallet);
 
-        // Mining elements
-        const minerAddress = document.getElementById('miner-address');
-        const mineBlockBtn = document.getElementById('mine-block');
-        const miningResult = document.getElementById('mining-result');
+                    // Connect the wallet to the DApp SDK
+                    dapp.connectWallet(currentWallet.address).then(() => {
+                        console.log('Wallet connected from saved data:', currentWallet.address);
+                        showWalletInfo();
+                        showNotification('Wallet loaded from saved data', 'info');
+                    }).catch(error => {
+                        console.error('Failed to connect saved wallet:', error);
+                        showNotification('Failed to connect saved wallet', 'error');
+                    });
+                }
 
-        // Metrics elements
-        const refreshMetricsBtn = document.getElementById('refresh-metrics');
-        const totalTransactions = document.getElementById('total-transactions');
-        const totalBlocks = document.getElementById('total-blocks');
-        const totalContracts = document.getElementById('total-contracts');
-        const tps = document.getElementById('tps');
-        const uptime = document.getElementById('uptime');
-        const avgResponse = document.getElementById('avg-response');
-
-        // History elements
-        const historyAddress = document.getElementById('history-address');
-        const fetchTransactionsBtn = document.getElementById('fetch-transactions');
-        const fetchAllTransactionsBtn = document.getElementById('fetch-all-transactions');
-        const transactionsBody = document.getElementById('transactions-body');
-
-        // Utility functions
-        function setLoading(button, isLoading) {
-            const btnText = button.querySelector('.btn-text');
-            const loading = button.querySelector('.loading');
-
-            if (isLoading) {
-                btnText.style.display = 'none';
-                loading.style.display = 'inline-block';
-                button.disabled = true;
-            } else {
-                btnText.style.display = 'inline';
-                loading.style.display = 'none';
-                button.disabled = false;
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    if (settings.autoRefresh !== undefined) {
+                        document.getElementById('autoRefreshToggle').checked = settings.autoRefresh;
+                        if (settings.autoRefresh) {
+                            toggleAutoRefresh(true);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load saved data:', error);
             }
         }
 
-        function showResult(element, content, isError = false) {
-            element.style.display = 'block';
-            element.textContent = content;
-            element.style.borderLeft = isError ? '4px solid var(--error-color)' : '4px solid var(--success-color)';
+        // Save data to localStorage
+        function saveData() {
+            try {
+                if (currentWallet) {
+                    localStorage.setItem(STORAGE_KEYS.WALLET_DATA, JSON.stringify(currentWallet));
+                }
+
+                const settings = {
+                    autoRefresh: document.getElementById('autoRefreshToggle').checked
+                };
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+            } catch (error) {
+                console.error('Failed to save data:', error);
+            }
         }
 
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('notification-container');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                ${message}
-            `;
-
-            container.appendChild(notification);
-            setTimeout(() => notification.classList.add('show'), 100);
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => container.removeChild(notification), 300);
-            }, 4000);
+        // Toggle auto-refresh functionality
+        function toggleAutoRefresh(enabled) {
+            if (enabled) {
+                if (balanceRefreshInterval) {
+                    clearInterval(balanceRefreshInterval);
+                }
+                balanceRefreshInterval = setInterval(refreshBalance, 30000); // 30 seconds
+                showNotification('Auto-refresh enabled (30s interval)', 'info');
+            } else {
+                if (balanceRefreshInterval) {
+                    clearInterval(balanceRefreshInterval);
+                    balanceRefreshInterval = null;
+                }
+                showNotification('Auto-refresh disabled', 'info');
+            }
+            saveData();
         }
 
-        function updateStatus(isOnline) {
-            statusDot.className = `status-dot ${isOnline ? '' : 'offline'}`;
-            statusText.textContent = isOnline ? 'Connected to enhanced blockchain' : 'Disconnected from blockchain';
+        // Update feature status
+        async function updateFeatureStatus() {
+            try {
+                const endpoints = await dapp.checkAvailableEndpoints();
+
+                const transactionsAvailable = endpoints['Send Transaction']?.available || false;
+                const walletsAvailable = (endpoints['Create Wallet']?.available || false) && (endpoints['Import Wallet']?.available || false);
+                const miningAvailable = endpoints['Mining Status']?.available || false;
+
+                document.getElementById('transactionsFeature').textContent = `TX: ${transactionsAvailable ? '✅' : '❌'}`;
+                document.getElementById('walletsFeature').textContent = `Wallet: ${walletsAvailable ? '✅' : '❌'}`;
+                document.getElementById('miningFeature').textContent = `Mining: ${miningAvailable ? '✅' : '❌'}`;
+
+                document.getElementById('transactionsFeature').className = `feature-item ${transactionsAvailable ? 'available' : 'unavailable'}`;
+                document.getElementById('walletsFeature').className = `feature-item ${walletsAvailable ? 'available' : 'unavailable'}`;
+                document.getElementById('miningFeature').className = `feature-item ${miningAvailable ? 'available' : 'unavailable'}`;
+
+                document.getElementById('featureStatus').style.display = 'flex';
+
+                console.log('Feature status updated:', {
+                    transactions: transactionsAvailable,
+                    wallets: walletsAvailable,
+                    mining: miningAvailable
+                });
+            } catch (error) {
+                console.error('Failed to update feature status:', error);
+            }
         }
 
-        function updateMetrics() {
-            blockCount.textContent = `Blocks: ${wallet.metrics.totalBlocks}`;
-            transactionCount.textContent = `Txs: ${wallet.metrics.totalTransactions}`;
-            contractCount.textContent = `Contracts: ${wallet.metrics.totalContracts}`;
-            responseTime.textContent = `Latency: ${wallet.metrics.avgResponse}ms`;
+        // Enhanced initialize wallet function
+        async function initializeWallet() {
+            try {
+                showNotification('Connecting to blockchain...', 'info');
+
+                const data = await dapp.connect();
+                isConnected = true;
+                updateConnectionStatus('Connected', true);
+                updateBlockchainInfo(data);
+                updateFeatureStatus(); // Update feature status
+                showNotification('Connected to Nilotic Blockchain', 'success');
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateConnectionStatus('Disconnected', false);
+                showNotification('Failed to connect to blockchain', 'error');
+            }
         }
 
-        // Event listeners
-        checkBalanceBtn.addEventListener('click', async () => {
-            const address = walletAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a wallet address', 'error');
+        // Update connection status
+        function updateConnectionStatus(status, isConnected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusDot = document.querySelector('.status-dot');
+
+            statusElement.textContent = status;
+            statusDot.style.background = isConnected ? '#4ade80' : '#f5576c';
+        }
+
+        // Update blockchain information
+        function updateBlockchainInfo(data) {
+            document.getElementById('chainHeight').textContent = `Height: ${data.chainHeight || 0}`;
+            document.getElementById('pendingTx').textContent = `Pending: ${data.pendingTransactions || 0}`;
+            document.getElementById('difficulty').textContent = `Difficulty: ${data.difficulty || 4}`;
+        }
+
+        // Update network status
+        async function updateNetworkStatus() {
+            try {
+                const [networkData, miningData] = await Promise.all([
+                    dapp.getNetworkStatus(),
+                    dapp.getMiningStatus()
+                ]);
+
+                updateNetworkStats(networkData);
+                updateMiningStats(miningData);
+            } catch (error) {
+                console.error('Failed to update network status:', error);
+            }
+        }
+
+        // Update network statistics
+        function updateNetworkStats(data) {
+            document.getElementById('activeConnections').textContent = data.activeConnections || 0;
+            document.getElementById('totalPeers').textContent = data.totalPeers || 0;
+            document.getElementById('messagesReceived').textContent = data.totalMessagesReceived || 0;
+            document.getElementById('messagesSent').textContent = data.totalMessagesSent || 0;
+        }
+
+        // Update mining statistics
+        function updateMiningStats(data) {
+            document.getElementById('hashRate').textContent = data.hashRate || 0;
+            document.getElementById('currentDifficulty').textContent = data.currentDifficulty || 4;
+
+            const miningStatus = document.getElementById('miningStatus');
+            const miningStatusText = document.getElementById('miningStatusText');
+
+            if (data.isMining) {
+                miningStatus.className = 'mining-status active';
+                miningStatusText.textContent = 'Active';
+            } else {
+                miningStatus.className = 'mining-status inactive';
+                miningStatusText.textContent = 'Inactive';
+            }
+        }
+
+        // Create new wallet
+        async function createWallet() {
+            const name = document.getElementById('walletName').value;
+            const password = document.getElementById('walletPassword').value;
+
+            if (!name || !password) {
+                showNotification('Please enter wallet name and password', 'error');
                 return;
             }
 
-            setLoading(checkBalanceBtn, true);
+            showSpinner('createSpinner', true);
+
             try {
-                const balance = await wallet.getBalance(address);
-                showResult(balanceResult, JSON.stringify(balance, null, 2));
-                showNotification('Balance retrieved successfully', 'success');
+                const result = await dapp.createWallet(name, password);
+
+                if (result.success) {
+                    currentWallet = result.wallet;
+
+                    // The DApp SDK already sets this.wallet in createWallet method
+                    // No need to call connectWallet again
+                    console.log('Wallet created and connected:', currentWallet.address);
+
+                    showWalletInfo();
+                    saveData();
+                    showNotification('Wallet created successfully!', 'success');
+                } else {
+                    showNotification('Failed to create wallet', 'error');
+                }
             } catch (error) {
-                showResult(balanceResult, `Error: ${error.message}`, true);
-                showNotification('Failed to get balance', 'error');
+                console.error('Create wallet error:', error);
+                showNotification('Failed to create wallet', 'error');
             } finally {
-                setLoading(checkBalanceBtn, false);
+                showSpinner('createSpinner', false);
             }
-        });
+        }
 
-        sendTransactionBtn.addEventListener('click', async () => {
-            const sender = senderAddress.value.trim();
-            const recipient = recipientAddress.value.trim();
-            const amt = amount.value.trim();
+        // Import wallet
+        function importWallet() {
+            document.getElementById('importForm').style.display = 'block';
+        }
 
-            if (!sender || !recipient || !amt) {
+        // Perform wallet import
+        async function performImport() {
+            const name = document.getElementById('walletName').value;
+            const password = document.getElementById('walletPassword').value;
+            const privateKeyPEM = document.getElementById('privateKeyPEM').value;
+
+            if (!name || !password || !privateKeyPEM) {
                 showNotification('Please fill all fields', 'error');
                 return;
             }
 
-            setLoading(sendTransactionBtn, true);
+            showSpinner('performImportSpinner', true);
+
             try {
-                const result = await wallet.createTransaction(sender, recipient, amt);
-                showResult(transactionResult, JSON.stringify(result, null, 2));
-                showNotification('Transaction sent successfully', 'success');
+                const result = await dapp.importWallet(name, privateKeyPEM, password);
+
+                if (result.success) {
+                    currentWallet = result.wallet;
+
+                    // The DApp SDK already sets this.wallet in importWallet method
+                    // No need to call connectWallet again
+                    console.log('Wallet imported and connected:', currentWallet.address);
+
+                    showWalletInfo();
+                    saveData();
+                    document.getElementById('importForm').style.display = 'none';
+                    showNotification('Wallet imported successfully!', 'success');
+                } else {
+                    showNotification('Failed to import wallet', 'error');
+                }
             } catch (error) {
-                showResult(transactionResult, `Error: ${error.message}`, true);
-                showNotification('Transaction failed', 'error');
+                console.error('Import wallet error:', error);
+                showNotification('Failed to import wallet', 'error');
             } finally {
-                setLoading(sendTransactionBtn, false);
+                showSpinner('performImportSpinner', false);
             }
-        });
-
-        deployContractBtn.addEventListener('click', async () => {
-            const owner = contractOwner.value.trim();
-            const code = contractCode.value.trim();
-
-            if (!owner || !code) {
-                showNotification('Please fill all contract fields', 'error');
-                return;
-            }
-
-            setLoading(deployContractBtn, true);
-            try {
-                const result = await wallet.deployContract(owner, code);
-                showResult(contractResult, JSON.stringify(result, null, 2));
-                showNotification('Contract deployed successfully', 'success');
-            } catch (error) {
-                showResult(contractResult, `Error: ${error.message}`, true);
-                showNotification('Contract deployment failed', 'error');
-            } finally {
-                setLoading(deployContractBtn, false);
-            }
-        });
-
-        mineBlockBtn.addEventListener('click', async () => {
-            const address = minerAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a miner address', 'error');
-                return;
-            }
-
-            setLoading(mineBlockBtn, true);
-            try {
-                const result = await wallet.mineBlock(address);
-                showResult(miningResult, JSON.stringify(result, null, 2));
-                showNotification('Block mined successfully', 'success');
-                await checkBlockchainStatus();
-            } catch (error) {
-                showResult(miningResult, `Error: ${error.message}`, true);
-                showNotification('Mining failed', 'error');
-            } finally {
-                setLoading(mineBlockBtn, false);
-            }
-        });
-
-        refreshMetricsBtn.addEventListener('click', async () => {
-            setLoading(refreshMetricsBtn, true);
-            try {
-                const metrics = await wallet.getMetrics();
-
-                totalTransactions.textContent = metrics.total_transactions || 0;
-                totalBlocks.textContent = metrics.total_blocks || 0;
-                totalContracts.textContent = metrics.total_contracts || 0;
-                tps.textContent = (metrics.transactions_per_second || 0).toFixed(2);
-                uptime.textContent = `${metrics.uptime_seconds || 0}s`;
-                avgResponse.textContent = `${wallet.metrics.avgResponse}ms`;
-
-                updateMetrics();
-                showNotification('Metrics refreshed successfully', 'success');
-            } catch (error) {
-                showNotification('Failed to refresh metrics', 'error');
-            } finally {
-                setLoading(refreshMetricsBtn, false);
-            }
-        });
-
-        fetchTransactionsBtn.addEventListener('click', async () => {
-            const address = historyAddress.value.trim();
-            if (!address) {
-                showNotification('Please enter a wallet address', 'error');
-                return;
-            }
-
-            setLoading(fetchTransactionsBtn, true);
-            try {
-                const transactions = await wallet.getAllTransactions();
-                const filteredTransactions = transactions.filter(tx =>
-                    tx.sender === address || tx.recipient === address || tx.miner === address
-                );
-                displayTransactions(filteredTransactions);
-                showNotification(`Found ${filteredTransactions.length} transactions`, 'success');
-            } catch (error) {
-                displayTransactions([]);
-                showNotification('Failed to fetch transactions', 'error');
-            } finally {
-                setLoading(fetchTransactionsBtn, false);
-            }
-        });
-
-        fetchAllTransactionsBtn.addEventListener('click', async () => {
-            setLoading(fetchAllTransactionsBtn, true);
-            try {
-                const transactions = await wallet.getAllTransactions();
-                displayTransactions(transactions);
-                showNotification(`Found ${transactions.length} total transactions`, 'success');
-            } catch (error) {
-                displayTransactions([]);
-                showNotification('Failed to fetch all transactions', 'error');
-            } finally {
-                setLoading(fetchAllTransactionsBtn, false);
-            }
-        });
-
-        function displayTransactions(transactions) {
-            if (transactions.length === 0) {
-                transactionsBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                            No transactions found
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            transactionsBody.innerHTML = transactions.map(tx => {
-                const type = tx.type === 'mining_reward' ? 'Mining Reward' :
-                    tx.type === 'contract_deployment' ? 'Contract Deploy' :
-                        tx.type === 'contract_call' ? 'Contract Call' : 'Transfer';
-                const sender = tx.sender || tx.miner || 'System';
-                const recipient = tx.recipient || tx.contractAddress || 'N/A';
-                const amount = tx.amount || tx.reward || 0;
-                const timestamp = tx.timestamp || 'Unknown';
-
-                return `
-                    <tr class="transaction-row">
-                        <td><strong>${tx.blockIndex || 'N/A'}</strong></td>
-                        <td><span class="badge ${type === 'Mining Reward' ? 'success' : type.includes('Contract') ? 'warning' : 'primary'}">${type}</span></td>
-                        <td><code>${sender}</code></td>
-                        <td><code>${recipient}</code></td>
-                        <td><strong>${amount}</strong></td>
-                        <td>${timestamp}</td>
-                    </tr>
-                `;
-            }).join('');
         }
 
-        async function checkBlockchainStatus() {
+        // Show wallet information
+        function showWalletInfo() {
+            document.getElementById('walletInfo').style.display = 'block';
+            document.getElementById('walletActions').style.display = 'none';
+            document.getElementById('currentAddress').textContent = currentWallet.address;
+            updateWalletBalance();
+            setupTransactionFormListeners(); // Setup transaction form listeners
+            refreshTransactionHistory(); // Load transaction history
+            generateQRCode(); // Generate QR code for the wallet address
+        }
+
+        // Update wallet balance
+        async function updateWalletBalance() {
+            if (!currentWallet) return;
+
             try {
-                const info = await wallet.getBlockchainInfo();
-                updateStatus(true);
-                wallet.isConnected = true;
+                const balance = await dapp.getBalance(currentWallet.address);
+                const balanceAmount = balance.balance || 0.00;
+                document.getElementById('currentBalance').textContent = `${balanceAmount} NIL`;
 
-                // Update metrics
-                if (info.chain) {
-                    wallet.metrics.totalBlocks = info.chain.length;
-                    wallet.metrics.totalTransactions = info.chain.reduce((total, block) => {
-                        return total + (block.transactions ? block.transactions.length : 0);
-                    }, 0);
+                // Save last balance and update time
+                localStorage.setItem(STORAGE_KEYS.LAST_BALANCE, balanceAmount.toString());
+                const now = new Date();
+                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, now.toISOString());
+                document.getElementById('lastUpdated').textContent = `Last updated: ${now.toLocaleTimeString()}`;
+
+                return balanceAmount;
+            } catch (error) {
+                console.error('Failed to update balance:', error);
+                showNotification('Failed to update balance', 'error');
+                return null;
+            }
+        }
+
+        // Refresh balance manually
+        async function refreshBalance() {
+            if (!currentWallet) {
+                showNotification('No wallet loaded', 'error');
+                return;
+            }
+
+            const balanceElement = document.getElementById('currentBalance');
+            const originalText = balanceElement.textContent;
+
+            // Show loading state
+            balanceElement.textContent = 'Refreshing...';
+
+            try {
+                const newBalance = await updateWalletBalance();
+                if (newBalance !== null) {
+                    showNotification('Balance refreshed successfully', 'success');
                 }
-                updateMetrics();
+            } catch (error) {
+                balanceElement.textContent = originalText;
+                showNotification('Failed to refresh balance', 'error');
+            }
+        }
 
+        // Check wallet connection status
+        function checkWalletConnection() {
+            if (!currentWallet) {
+                return { connected: false, error: 'No wallet loaded' };
+            }
+
+            if (!dapp.wallet) {
+                return { connected: false, error: 'Wallet not connected to DApp SDK' };
+            }
+
+            if (dapp.wallet.address !== currentWallet.address) {
+                return { connected: false, error: 'Wallet address mismatch' };
+            }
+
+            return { connected: true, wallet: dapp.wallet };
+        }
+
+        // Send transaction
+        async function sendTransaction() {
+            // Check wallet connection first
+            const walletStatus = checkWalletConnection();
+            if (!walletStatus.connected) {
+                showNotification(`Transaction failed: ${walletStatus.error}`, 'error');
+                console.error('Wallet connection check failed:', walletStatus);
+                return;
+            }
+
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const fee = parseFloat(document.getElementById('transactionFee').value);
+            const message = document.getElementById('transactionMessage').value;
+
+            if (!recipient || !amount || amount <= 0) {
+                showNotification('Please enter valid recipient and amount', 'error');
+                return;
+            }
+
+            if (fee <= 0) {
+                showNotification('Transaction fee must be positive', 'error');
+                return;
+            }
+
+            // Validate transaction data
+            const validation = dapp.validateTransaction({
+                recipient: recipient,
+                amount: amount,
+                fee: fee,
+                message: message
+            });
+
+            if (!validation.isValid) {
+                showNotification(`Transaction validation failed: ${validation.errors.join(', ')}`, 'error');
+                return;
+            }
+
+            // Check blockchain connection first
+            try {
+                await dapp.connect();
+                showNotification('Blockchain connection verified', 'info');
+            } catch (error) {
+                console.error('Blockchain connection failed:', error);
+                showNotification('Cannot connect to blockchain. Please check if the server is running.', 'error');
+                return;
+            }
+
+            // Check if user has sufficient balance
+            try {
+                const balance = await dapp.getBalance(currentWallet.address);
+                const totalCost = amount + fee;
+
+                if (balance.balance < totalCost) {
+                    showNotification(`Insufficient balance. You need ${totalCost} NIL but have ${balance.balance} NIL`, 'error');
+                    return;
+                }
+            } catch (error) {
+                console.error('Balance check failed:', error);
+                showNotification('Failed to check balance. Please try again.', 'error');
+                return;
+            }
+
+            showSpinner('sendSpinner', true);
+
+            try {
+                console.log('Sending transaction with data:', {
+                    recipient: recipient,
+                    amount: amount,
+                    fee: fee,
+                    message: message,
+                    sender: currentWallet.address,
+                    walletConnected: !!dapp.wallet
+                });
+
+                const result = await dapp.sendTransaction(recipient, amount, fee, message);
+
+                if (result.success) {
+                    showNotification(`Transaction sent successfully! Hash: ${result.transactionId}`, 'success');
+                    document.getElementById('recipientAddress').value = '';
+                    document.getElementById('transactionAmount').value = '';
+                    document.getElementById('transactionFee').value = '0.001'; // Reset fee
+                    document.getElementById('transactionMessage').value = ''; // Clear message
+                    document.getElementById('transactionSummary').style.display = 'none'; // Hide summary
+                    updateWalletBalance();
+                    refreshTransactionHistory(); // Refresh history after sending
+
+                    // Log successful transaction details
+                    console.log('Transaction successful:', {
+                        hash: result.transactionId,
+                        message: result.message,
+                        transaction: result.transaction
+                    });
+                } else {
+                    showNotification(`Transaction failed: ${result.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Send transaction error:', error);
+
+                // Provide more specific error messages
+                let errorMessage = 'Failed to send transaction';
+
+                if (error.message.includes('Wallet not connected')) {
+                    errorMessage = 'Wallet not connected. Please create or import a wallet first.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to blockchain server. Please check if the server is running at http://localhost:5500';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Transaction endpoint not found. Please check blockchain server configuration';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Server error occurred. Please try again later';
+                } else if (error.message.includes('NetworkError')) {
+                    errorMessage = 'Network error. Please check your internet connection';
+                } else {
+                    errorMessage = `Transaction failed: ${error.message}`;
+                }
+
+                showNotification(errorMessage, 'error');
+
+                // Show detailed error in console for debugging
+                console.error('Detailed transaction error:', {
+                    error: error,
+                    transactionData: {
+                        recipient: recipient,
+                        amount: amount,
+                        fee: fee,
+                        message: message,
+                        sender: currentWallet.address
+                    },
+                    walletStatus: checkWalletConnection()
+                });
+            } finally {
+                showSpinner('sendSpinner', false);
+            }
+        }
+
+        // Test blockchain connection
+        async function testBlockchainConnection() {
+            try {
+                showNotification('Testing blockchain connection...', 'info');
+                const result = await dapp.connect();
+                console.log('Blockchain connection test result:', result);
+                showNotification('Blockchain connection successful!', 'success');
                 return true;
             } catch (error) {
-                updateStatus(false);
-                wallet.isConnected = false;
+                console.error('Blockchain connection test failed:', error);
+                showNotification('Blockchain connection failed. Please check server status.', 'error');
                 return false;
             }
         }
 
-        // Sync wallet address across inputs
-        walletAddress.addEventListener('input', () => {
-            const value = walletAddress.value;
-            senderAddress.value = value;
-            historyAddress.value = value;
-            minerAddress.value = value;
-            contractOwner.value = value;
+        // Debug blockchain status
+        async function debugBlockchainStatus() {
+            try {
+                showNotification('Debugging blockchain status...', 'info');
+
+                const diagnostics = await dapp.testConnection();
+                const endpoints = await dapp.checkAvailableEndpoints();
+
+                console.log('=== BLOCKCHAIN DIAGNOSTICS ===');
+                console.log('Connection Status:', diagnostics.connection ? 'OK' : 'FAILED');
+                console.log('Endpoint Status:');
+                Object.entries(diagnostics.endpoints).forEach(([endpoint, status]) => {
+                    console.log(`  ${endpoint}: ${status}`);
+                });
+
+                console.log('=== AVAILABLE ENDPOINTS ===');
+                Object.entries(endpoints).forEach(([name, info]) => {
+                    const status = info.available ? '✅ Available' : '❌ Not Available';
+                    console.log(`  ${name}: ${status} (${info.status || 'N/A'})`);
+                });
+
+                if (diagnostics.errors.length > 0) {
+                    console.log('Errors:');
+                    diagnostics.errors.forEach(error => console.log(`  - ${error}`));
+                }
+
+                // Show summary notification
+                const successCount = Object.values(diagnostics.endpoints).filter(status => status === 'OK' || status === 'Available').length;
+                const totalEndpoints = Object.keys(diagnostics.endpoints).length;
+                const availableEndpoints = Object.values(endpoints).filter(info => info.available).length;
+                const totalEndpointsChecked = Object.keys(endpoints).length;
+
+                let summaryMessage = '';
+                if (diagnostics.connection && successCount === totalEndpoints && availableEndpoints === totalEndpointsChecked) {
+                    summaryMessage = 'All blockchain endpoints are working correctly!';
+                } else if (diagnostics.connection) {
+                    summaryMessage = `Blockchain partially working. ${successCount}/${totalEndpoints} core endpoints OK, ${availableEndpoints}/${totalEndpointsChecked} endpoints available.`;
+                } else {
+                    summaryMessage = 'Blockchain connection failed. Check server status.';
+                }
+
+                showNotification(summaryMessage, diagnostics.connection ? 'success' : 'error');
+
+            } catch (error) {
+                console.error('Debug failed:', error);
+                showNotification('Debug failed. Check console for error details.', 'error');
+            }
+        }
+
+        // Update transaction summary in real-time
+        function updateTransactionSummary() {
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
+            const fee = parseFloat(document.getElementById('transactionFee').value) || 0.001;
+            const total = amount + fee;
+
+            if (recipient && amount > 0) {
+                document.getElementById('summaryRecipient').textContent = recipient;
+                document.getElementById('summaryAmount').textContent = `${amount} NIL`;
+                document.getElementById('summaryFee').textContent = `${fee} NIL`;
+                document.getElementById('summaryTotal').textContent = `${total} NIL`;
+                document.getElementById('transactionSummary').style.display = 'block';
+            } else {
+                document.getElementById('transactionSummary').style.display = 'none';
+            }
+        }
+
+        // Refresh transaction history
+        async function refreshTransactionHistory() {
+            if (!currentWallet) {
+                showNotification('No wallet loaded', 'error');
+                return;
+            }
+
+            showSpinner('historySpinner', true);
+
+            try {
+                const filter = document.getElementById('transactionFilter').value;
+                const transactions = await dapp.getTransactionHistory(currentWallet.address, filter);
+                displayTransactionHistory(transactions);
+            } catch (error) {
+                console.error('Failed to refresh transaction history:', error);
+                showNotification('Failed to load transaction history', 'error');
+            } finally {
+                showSpinner('historySpinner', false);
+            }
+        }
+
+        // Display transaction history
+        function displayTransactionHistory(transactions) {
+            const transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = ''; // Clear previous transactions
+
+            if (transactions.length === 0) {
+                transactionList.innerHTML = '<div class="no-transactions">No transactions found</div>';
+                return;
+            }
+
+            transactions.forEach(tx => {
+                const txItem = document.createElement('div');
+                txItem.className = 'transaction-item';
+
+                // Determine transaction type for display
+                let displayType = tx.type;
+                if (tx.sender === currentWallet.address) {
+                    displayType = 'sent';
+                } else if (tx.recipient === currentWallet.address) {
+                    displayType = 'received';
+                }
+
+                txItem.innerHTML = `
+                    <div class="tx-type ${displayType}">${displayType.charAt(0).toUpperCase() + displayType.slice(1)}</div>
+                    <div class="tx-details">
+                        <div class="tx-id">ID: ${tx.id}</div>
+                        <div class="tx-recipient">${displayType === 'sent' ? 'To: ' + tx.recipient : 'From: ' + tx.sender}</div>
+                        <div class="tx-amount">${displayType === 'sent' ? '-' : '+'}${tx.amount} NIL</div>
+                        <div class="tx-fee">Fee: ${tx.fee} NIL</div>
+                        ${tx.message ? `<div class="tx-message">Message: ${tx.message}</div>` : ''}
+                        <div class="tx-status ${tx.status}">Status: ${tx.status}</div>
+                        <div class="tx-timestamp">${new Date(tx.timestamp).toLocaleString()}</div>
+                    </div>
+                `;
+                transactionList.appendChild(txItem);
+            });
+        }
+
+        // Setup transaction form event listeners
+        function setupTransactionFormListeners() {
+            const recipientInput = document.getElementById('recipientAddress');
+            const amountInput = document.getElementById('transactionAmount');
+            const feeInput = document.getElementById('transactionFee');
+            const messageInput = document.getElementById('transactionMessage');
+            const filterSelect = document.getElementById('transactionFilter');
+
+            // Update transaction summary in real-time
+            [recipientInput, amountInput, feeInput].forEach(input => {
+                input.addEventListener('input', updateTransactionSummary);
+            });
+
+            // Filter transaction history
+            filterSelect.addEventListener('change', refreshTransactionHistory);
+
+            // Auto-refresh transaction history when wallet is loaded
+            if (currentWallet) {
+                refreshTransactionHistory();
+            }
+        }
+
+        // Enhanced show wallet info function
+        function showWalletInfo() {
+            document.getElementById('walletInfo').style.display = 'block';
+            document.getElementById('walletActions').style.display = 'none';
+            document.getElementById('currentAddress').textContent = currentWallet.address;
+            updateWalletBalance();
+            setupTransactionFormListeners(); // Setup transaction form listeners
+            refreshTransactionHistory(); // Load transaction history
+            generateQRCode(); // Generate QR code for the wallet address
+        }
+
+        // Generate QR code for wallet address
+        function generateQRCode() {
+            if (!currentWallet) return;
+
+            const qrCodeElement = document.getElementById('qrCode');
+            const address = currentWallet.address;
+
+            // Simple QR code generation using a library or fallback
+            try {
+                // For now, we'll create a simple visual representation
+                // In a real implementation, you'd use a QR code library like qrcode.js
+                qrCodeElement.innerHTML = `
+                    <div style="
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        background: white;
+                        color: #333;
+                        font-family: monospace;
+                        font-size: 8px;
+                        text-align: center;
+                        padding: 10px;
+                        word-break: break-all;
+                    ">
+                        <div style="margin-bottom: 10px; font-weight: bold;">NILOTIC WALLET</div>
+                        <div style="margin-bottom: 5px;">Address:</div>
+                        <div style="font-size: 6px; line-height: 1.2;">${address}</div>
+                        <div style="margin-top: 10px; font-size: 10px; color: #666;">Scan to receive NIL</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to generate QR code:', error);
+                qrCodeElement.innerHTML = '<div class="qr-placeholder">QR Code Unavailable</div>';
+            }
+        }
+
+        // Copy wallet address to clipboard
+        async function copyAddress() {
+            if (!currentWallet) {
+                showNotification('No wallet loaded', 'error');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(currentWallet.address);
+                showNotification('Address copied to clipboard!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = currentWallet.address;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('Address copied to clipboard!', 'success');
+            }
+        }
+
+        // Show receive transaction modal
+        function showReceiveModal() {
+            if (!currentWallet) {
+                showNotification('No wallet loaded', 'error');
+                return;
+            }
+
+            // Create a simple modal for receiving transactions
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    max-width: 500px;
+                    width: 90%;
+                    text-align: center;
+                ">
+                    <h3 style="margin-bottom: 20px; color: var(--primary-color);">Receive NIL</h3>
+                    <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                        Share your wallet address with others to receive NIL tokens.
+                    </p>
+                    <div style="
+                        background: #f7fafc;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        font-family: monospace;
+                        word-break: break-all;
+                        font-size: 14px;
+                    ">
+                        ${currentWallet.address}
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="copyAddress(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="
+                                    padding: 10px 20px;
+                                    background: var(--primary-color);
+                                    color: white;
+                                    border: none;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                ">
+                            Copy Address
+                        </button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove();" 
+                                style="
+                                    padding: 10px 20px;
+                                    background: var(--text-secondary);
+                                    color: white;
+                                    border: none;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                ">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close modal when clicking outside
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Enhanced transaction validation with better error messages
+        function validateTransactionForm() {
+            const recipient = document.getElementById('recipientAddress').value.trim();
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const fee = parseFloat(document.getElementById('transactionFee').value);
+            const message = document.getElementById('transactionMessage').value;
+
+            const errors = [];
+
+            if (!recipient) {
+                errors.push('Recipient address is required');
+            } else if (recipient.length < 10) {
+                errors.push('Recipient address is too short');
+            }
+
+            if (!amount || amount <= 0) {
+                errors.push('Amount must be greater than 0');
+            }
+
+            if (fee < 0) {
+                errors.push('Transaction fee cannot be negative');
+            }
+
+            if (message && message.length > 100) {
+                errors.push('Message is too long (max 100 characters)');
+            }
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        // Start mining
+        async function startMining() {
+            if (!currentWallet) {
+                showNotification('Please create or import a wallet first', 'error');
+                return;
+            }
+
+            showSpinner('startMiningSpinner', true);
+
+            try {
+                const result = await dapp.startMining(currentWallet.address);
+
+                if (result.success) {
+                    showNotification('Mining started!', 'success');
+                    updateNetworkStatus();
+                } else {
+                    showNotification('Failed to start mining', 'error');
+                }
+            } catch (error) {
+                console.error('Start mining error:', error);
+                showNotification('Failed to start mining', 'error');
+            } finally {
+                showSpinner('startMiningSpinner', false);
+            }
+        }
+
+        // Stop mining
+        async function stopMining() {
+            showSpinner('stopMiningSpinner', true);
+
+            try {
+                const result = await dapp.stopMining();
+
+                if (result.success) {
+                    showNotification('Mining stopped!', 'success');
+                    updateNetworkStatus();
+                } else {
+                    showNotification('Failed to stop mining', 'error');
+                }
+            } catch (error) {
+                console.error('Stop mining error:', error);
+                showNotification('Failed to stop mining', 'error');
+            } finally {
+                showSpinner('stopMiningSpinner', false);
+            }
+        }
+
+        // Create token
+        async function createToken() {
+            const tokenId = document.getElementById('tokenId').value;
+            const amount = parseFloat(document.getElementById('tokenAmount').value);
+            const creator = document.getElementById('creatorAddress').value;
+
+            if (!tokenId || !amount || !creator) {
+                showNotification('Please fill all token fields', 'error');
+                return;
+            }
+
+            showSpinner('tokenSpinner', true);
+
+            try {
+                const result = await dapp.createToken(tokenId, amount, creator);
+
+                if (result.success) {
+                    showNotification('Token created successfully!', 'success');
+                    document.getElementById('tokenId').value = '';
+                    document.getElementById('tokenAmount').value = '';
+                    document.getElementById('creatorAddress').value = '';
+                } else {
+                    showNotification('Failed to create token', 'error');
+                }
+            } catch (error) {
+                console.error('Create token error:', error);
+                showNotification('Failed to create token', 'error');
+            } finally {
+                showSpinner('tokenSpinner', false);
+            }
+        }
+
+        // Deploy contract
+        async function deployContract() {
+            if (!currentWallet) {
+                showNotification('Please create or import a wallet first', 'error');
+                return;
+            }
+
+            const contractCode = document.getElementById('contractCode').value;
+            const constructorArgsStr = document.getElementById('constructorArgs').value;
+
+            if (!contractCode) {
+                showNotification('Please enter contract code', 'error');
+                return;
+            }
+
+            let constructorArgs = [];
+            if (constructorArgsStr) {
+                try {
+                    constructorArgs = JSON.parse(constructorArgsStr);
+                } catch (error) {
+                    showNotification('Invalid constructor arguments JSON', 'error');
+                    return;
+                }
+            }
+
+            showSpinner('deploySpinner', true);
+
+            try {
+                const result = await dapp.deployContract(contractCode, constructorArgs);
+
+                if (result.success) {
+                    showNotification(`Contract deployed at ${result.contractAddress}!`, 'success');
+                    document.getElementById('contractCode').value = '';
+                    document.getElementById('constructorArgs').value = '';
+                } else {
+                    showNotification('Failed to deploy contract', 'error');
+                }
+            } catch (error) {
+                console.error('Deploy contract error:', error);
+                showNotification('Failed to deploy contract', 'error');
+            } finally {
+                showSpinner('deploySpinner', false);
+            }
+        }
+
+        // Refresh network status
+        async function refreshNetworkStatus() {
+            showSpinner('networkSpinner', true);
+            await updateNetworkStatus();
+            showSpinner('networkSpinner', false);
+        }
+
+        // Utility functions
+        function showSpinner(spinnerId, show) {
+            const spinner = document.getElementById(spinnerId);
+            if (spinner) {
+                spinner.style.display = show ? 'inline-block' : 'none';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            container.appendChild(notification);
+
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 5000);
+        }
+
+        // Handle page unload to save data
+        window.addEventListener('beforeunload', function () {
+            saveData();
         });
 
-        // Initialize
-        checkBlockchainStatus();
-
-        // Auto-refresh status and metrics every 30 seconds
-        setInterval(async () => {
-            await checkBlockchainStatus();
-            try {
-                const metrics = await wallet.getMetrics();
-                totalTransactions.textContent = metrics.total_transactions || 0;
-                totalBlocks.textContent = metrics.total_blocks || 0;
-                totalContracts.textContent = metrics.total_contracts || 0;
-                tps.textContent = (metrics.transactions_per_second || 0).toFixed(2);
-                uptime.textContent = `${metrics.uptime_seconds || 0}s`;
-            } catch (error) {
-                console.error('Failed to update metrics:', error);
+        // Handle page visibility change to pause/resume auto-refresh
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                // Page is hidden, pause auto-refresh
+                if (balanceRefreshInterval) {
+                    clearInterval(balanceRefreshInterval);
+                    balanceRefreshInterval = null;
+                }
+            } else {
+                // Page is visible, resume auto-refresh if enabled
+                const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+                if (autoRefreshToggle.checked) {
+                    toggleAutoRefresh(true);
+                }
             }
-        }, 30000);
+        });
+
+        // Debug wallet connection
+        function debugWalletConnection() {
+            console.log('=== WALLET CONNECTION DEBUG ===');
+            console.log('Current Wallet (UI):', currentWallet);
+            console.log('DApp SDK Wallet:', dapp.wallet);
+            console.log('Wallet Connection Status:', checkWalletConnection());
+
+            if (currentWallet && !dapp.wallet) {
+                console.log('Attempting to reconnect wallet...');
+                dapp.connectWallet(currentWallet.address).then(() => {
+                    console.log('Wallet reconnected successfully');
+                    showNotification('Wallet reconnected successfully', 'success');
+                }).catch(error => {
+                    console.error('Failed to reconnect wallet:', error);
+                    showNotification('Failed to reconnect wallet', 'error');
+                });
+            }
+        }
+
+        // Send test transaction
+        async function sendTestTransaction() {
+            if (!currentWallet) {
+                showNotification('Please create or import a wallet first', 'error');
+                return;
+            }
+
+            // Check wallet connection first
+            const walletStatus = checkWalletConnection();
+            if (!walletStatus.connected) {
+                showNotification(`Test transaction failed: ${walletStatus.error}`, 'error');
+                debugWalletConnection(); // Show debug info
+                return;
+            }
+
+            // Use a test recipient address (same as sender for testing)
+            const testRecipient = currentWallet.address;
+            const testAmount = 0.001; // Minimal amount
+            const testFee = 0.001;
+            const testMessage = 'Test transaction';
+
+            showNotification('Sending test transaction...', 'info');
+
+            try {
+                console.log('Sending test transaction to self:', {
+                    recipient: testRecipient,
+                    amount: testAmount,
+                    fee: testFee,
+                    message: testMessage,
+                    walletConnected: !!dapp.wallet
+                });
+
+                const result = await dapp.sendTransaction(testRecipient, testAmount, testFee, testMessage);
+
+                if (result.success) {
+                    showNotification('Test transaction sent successfully!', 'success');
+                    console.log('Test transaction result:', result);
+                    updateWalletBalance();
+                    refreshTransactionHistory();
+                } else {
+                    showNotification(`Test transaction failed: ${result.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Test transaction error:', error);
+                showNotification(`Test transaction failed: ${error.message}`, 'error');
+                debugWalletConnection(); // Show debug info on failure
+            }
+        }
     </script>
 </body>
 

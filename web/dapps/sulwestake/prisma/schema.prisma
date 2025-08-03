@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  username          String   @unique
+  firstName         String
+  lastName          String
+  passwordHash      String
+  avatar            String?
+  isActive          Boolean  @default(true)
+  role              String   @default("user")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLogin         DateTime?
+  
+  // User preferences
+  preferences       UserPreferences?
+  
+  // User wallets
+  wallets           UserWallet[]
+  
+  // User sessions
+  sessions          UserSession[]
+  
+  // User transactions
+  transactions      UserTransaction[]
+  
+  // User staking data
+  stakingData       UserStakingData?
+  
+  @@map("users")
+}
+
+model UserPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Theme preferences
+  theme             String   @default("dark")
+  language          String   @default("en")
+  timezone          String   @default("UTC")
+  
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  smsNotifications   Boolean @default(false)
+  
+  // Privacy preferences
+  showBalance       Boolean @default(true)
+  showTransactions  Boolean @default(true)
+  allowAnalytics    Boolean @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("user_preferences")
+}
+
+model UserWallet {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  address           String   @unique
+  name              String
+  type              String   @default("nilotic") // nilotic, ethereum, etc.
+  isPrimary         Boolean  @default(false)
+  
+  // Blockchain data (cached)
+  balance           Float    @default(0)
+  staked            Float    @default(0)
+  rewards           Float    @default(0)
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastActivity      DateTime @default(now())
+  
+  // Relations
+  transactions      UserTransaction[]
+  
+  @@map("user_wallets")
+}
+
+model UserSession {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token             String   @unique
+  expiresAt         DateTime
+  isActive          Boolean  @default(true)
+  
+  // Session metadata
+  userAgent         String?
+  ipAddress         String?
+  createdAt         DateTime @default(now())
+  
+  @@map("user_sessions")
+}
+
+model UserTransaction {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  walletId          String?
+  wallet            UserWallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  
+  // Blockchain transaction data
+  hash              String   @unique
+  from              String
+  to                String
+  amount            Float
+  type              String   // stake, reward, transfer, etc.
+  status            String   @default("pending") // pending, confirmed, failed
+  description       String?  // Optional transaction description
+  blockNumber       Int?
+  gasUsed           Int?
+  fee               Float?
+  
+  // Metadata
+  timestamp         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("user_transactions")
+}
+
+model UserStakingData {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Staking metrics
+  totalStaked       Float    @default(0)
+  totalRewards      Float    @default(0)
+  apy               Float    @default(12.5)
+  stakingLevel      String   @default("bronze") // bronze, silver, gold, platinum
+  
+  // Timestamps
+  stakingStartDate  DateTime?
+  lastRewardDate    DateTime?
+  nextRewardEstimate Float   @default(0)
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("user_staking_data")
+}
+
+// Blockchain cache for performance
+model BlockchainCache {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  value             String   // JSON string
+  expiresAt         DateTime
+  
+  createdAt         DateTime @default(now())
+  
+  @@map("blockchain_cache")
+} 
