@@ -498,6 +498,15 @@ int main(int argc, char* argv[]) {
     // Create and start API server
     Logger::info("Creating API server...");
     API api(blockchain);
+    
+    // Start PoRC system
+    Logger::info("Starting PoRC (Proof of Resource Contribution) system...");
+    if (api.getPoRCSystem().start()) {
+        Logger::info("PoRC system started successfully");
+    } else {
+        Logger::error("Failed to start PoRC system");
+    }
+    
     Logger::info("Starting API server on port " + std::to_string(port));
     api.start(port);
     Logger::info("API server start called");
@@ -512,6 +521,11 @@ int main(int argc, char* argv[]) {
     
     // Clean shutdown
     Logger::info("Shutting down Nilotic Blockchain server...");
+    
+    // Stop PoRC system
+    Logger::info("Stopping PoRC system...");
+    api.getPoRCSystem().stop();
+    
     api.stop();
     
     // Save blockchain state before exiting
