@@ -4,6 +4,7 @@
 #include "wallet.h"
 #include "mining.h"
 #include "networking.h"
+#include "porc.h"
 #include <thread>
 #include <mutex>
 #include <sstream>
@@ -179,6 +180,10 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             // Handle CORS preflight requests
             response["status"] = "ok";
             status = "200 OK";
+        }
+        else if (path.substr(0, 5) == "/porc") {
+            // Handle PoRC endpoints
+            return handlePoRCRequest(method, path, body);
         }
         else if (path == "/") {
             // Root endpoint
@@ -499,4 +504,66 @@ std::string API::generateResponse(const std::string& method, const std::string& 
     http_response += json_body;
     
     return http_response;
+}
+
+// Handle PoRC-specific requests
+std::string API::handlePoRCRequest(const std::string& method, const std::string& path, const std::string& body) {
+    nlohmann::json response;
+    std::string status = "200 OK";
+    
+    try {
+        if (path == "/porc/enable" && method == "POST") {
+            // Enable PoRC for a wallet
+            nlohmann::json request = nlohmann::json::parse(body);
+            response = porcSystem.handleEnableRequest(request);
+        }
+        else if (path == "/porc/stats" && method == "GET") {
+            // Get PoRC statistics
+            response = porcSystem.handleStatsRequest(nlohmann::json());
+        }
+        else if (path == "/porc/submit_log" && method == "POST") {
+            // Submit contribution log
+            nlohmann::json request = nlohmann::json::parse(body);
+            response = porcSystem.handleSubmitLogRequest(request);
+        }
+        else if (path.substr(0, 18) == "/porc/wallet/" && method == "GET") {
+            // Get wallet PoRC status
+            std::string address = path.substr(18);
+            nlohmann::json request;
+            request["address"] = address;
+            response = porcSystem.handleWalletStatusRequest(request);
+        }
+        else if (path == "/porc/pools" && method == "GET") {
+            // Get active pools
+            response = porcSystem.handlePoolStatusRequest(nlohmann::json());
+        }
+        else if (path == "/porc/tasks" && method == "GET") {
+            // Get tasks for a wallet (requires address parameter)
+            // This would need to be implemented with query parameters
+            response["success"] = false;
+            response["message"] = "Use /porc/tasks?address=<wallet_address>";
+        }
+        else {
+            response["success"] = false;
+            response["message"] = "Unknown PoRC endpoint";
+            status = "404 Not Found";
+        }
+    } catch (const std::exception& e) {
+        response["success"] = false;
+        response["message"] = "Error processing PoRC request: " + std::string(e.what());
+        status = "500 Internal Server Error";
+    }
+    
+    // Format response
+    std::string responseStr = response.dump();
+    std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
+    httpResponse += "Content-Type: application/json\r\n";
+    httpResponse += "Access-Control-Allow-Origin: *\r\n";
+    httpResponse += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+    httpResponse += "Access-Control-Allow-Headers: Content-Type\r\n";
+    httpResponse += "Content-Length: " + std::to_string(responseStr.length()) + "\r\n";
+    httpResponse += "\r\n";
+    httpResponse += responseStr;
+    
+    return httpResponse;
 }
