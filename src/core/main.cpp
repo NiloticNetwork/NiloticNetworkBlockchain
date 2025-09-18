@@ -507,6 +507,14 @@ int main(int argc, char* argv[]) {
         Logger::error("Failed to start PoRC system");
     }
     
+    // Start Unified Consensus System
+    Logger::info("Starting Unified Consensus System...");
+    if (api.getConsensusSystem().start()) {
+        Logger::info("Unified Consensus System started successfully");
+    } else {
+        Logger::error("Failed to start Unified Consensus System");
+    }
+    
     Logger::info("Starting API server on port " + std::to_string(port));
     api.start(port);
     Logger::info("API server start called");
@@ -525,6 +533,10 @@ int main(int argc, char* argv[]) {
     // Stop PoRC system
     Logger::info("Stopping PoRC system...");
     api.getPoRCSystem().stop();
+    
+    // Stop Unified Consensus System
+    Logger::info("Stopping Unified Consensus System...");
+    api.getConsensusSystem().stop();
     
     api.stop();
     

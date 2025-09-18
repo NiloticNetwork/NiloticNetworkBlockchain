@@ -40,6 +40,7 @@ add_executable(nilotic_blockchain
     src/core/mining.cpp
     src/core/networking.cpp
     src/core/porc.cpp
+    src/core/unified_consensus.cpp
 )
 
 # Find SQLite3 - use pkg-config approach for better compatibility
