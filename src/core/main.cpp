@@ -15,9 +15,17 @@
 #include "utils.h"
 #include "oderoslw.h"
 #include "api.h"
+#include "rate_limiter.h"
+#include "security_middleware.h"
 
 // Global blockchain instance
 Blockchain blockchain;
+
+// Global rate limiter
+RateLimiter rateLimiter(60, 1000, std::chrono::minutes(5));
+
+// Global security middleware
+SecurityMiddleware securityMiddleware(false); // Set to true for HTTPS enforcement in production
 
 // Signal handling for clean shutdown
 volatile sig_atomic_t running = 1;
@@ -28,7 +36,18 @@ void signalHandler(int signum) {
 }
 
 // Function to handle HTTP requests
-std::string handleRequest(const std::string& request_data) {
+std::string handleRequest(const std::string& request_data, const std::string& clientIP = "127.0.0.1") {
+    // Security validation
+    if (!securityMiddleware.validateRequest(request_data, clientIP)) {
+        Logger::logSecurityEvent("Request validation failed", clientIP, "Security middleware blocked request");
+        return Utils::createJsonErrorResponse(403, "Request blocked by security policy");
+    }
+    
+    // Rate limiting check
+    if (!rateLimiter.isAllowed(clientIP)) {
+        Logger::logSecurityEvent("Rate limit exceeded", clientIP);
+        return Utils::createJsonErrorResponse(429, "Rate limit exceeded. Please try again later.");
+    }
     std::string method, uri, body;
     std::map<std::string, std::string> headers;
     
@@ -58,7 +77,9 @@ std::string handleRequest(const std::string& request_data) {
         response["difficulty"] = blockchain.getDifficulty();
         response["mining_reward"] = blockchain.getMiningReward();
         
-        return Utils::createJsonResponse(200, response);
+        std::string jsonResponse = Utils::createJsonResponse(200, response);
+        Logger::logApiAccess("/", "GET", clientIP, 200);
+        return securityMiddleware.addSecurityHeaders(securityMiddleware.addCorsHeaders(jsonResponse));
     }
     else if (path == "/chain") {
         // Return information about the blockchain
@@ -92,7 +113,9 @@ std::string handleRequest(const std::string& request_data) {
             response["blocks"] = blocks;
         }
         
-        return Utils::createJsonResponse(200, response);
+        std::string jsonResponse = Utils::createJsonResponse(200, response);
+        Logger::logApiAccess("/chain", "GET", clientIP, 200);
+        return securityMiddleware.addSecurityHeaders(securityMiddleware.addCorsHeaders(jsonResponse));
     }
     else if (path == "/transaction" && method == "POST") {
         // Create a new transaction
@@ -122,13 +145,34 @@ std::string handleRequest(const std::string& request_data) {
             std::string recipient = tx_data["recipient"].get<std::string>();
             double amount = tx_data["amount"].get<double>();
             
+            // Comprehensive input validation
+            if (!Utils::validateInput(sender, 256)) {
+                Logger::error("Invalid sender address format");
+                return Utils::createJsonErrorResponse(400, "Invalid sender address format");
+            }
+            
+            if (!Utils::validateInput(recipient, 256)) {
+                Logger::error("Invalid recipient address format");
+                return Utils::createJsonErrorResponse(400, "Invalid recipient address format");
+            }
+            
+            if (amount <= 0 || amount > 1000000) {
+                Logger::error("Invalid transaction amount");
+                return Utils::createJsonErrorResponse(400, "Invalid transaction amount");
+            }
+            
+            // Sanitize inputs
+            sender = Utils::sanitizeInput(sender);
+            recipient = Utils::sanitizeInput(recipient);
+            
             Logger::debug("Creating transaction: " + sender + " -> " + recipient + " for " + std::to_string(amount));
             
             // Create transaction
             Transaction tx(sender, recipient, amount);
             
-            // Sign transaction (in a real implementation, this would be done by the client)
-            tx.signTransaction("demo-key");
+            // For production, transactions should be signed by the client with their private key
+            // For now, we'll require the client to provide a signature or use a wallet service
+            Logger::warning("Transaction created but not signed - client must provide signature");
             Logger::debug("Transaction signed with hash: " + tx.getHash());
             
             // Add to pending transactions
@@ -212,7 +256,8 @@ std::string handleRequest(const std::string& request_data) {
             
             // Create a transaction for this token creation
             Transaction tx(creator, "", amount, true);
-            tx.signTransaction("demo-key");
+            // For production, this should be signed by the creator's private key
+            Logger::warning("Odero token transaction created but not signed - requires proper wallet integration");
             
             // Add to pending transactions
             if (blockchain.addTransaction(tx)) {
@@ -263,7 +308,7 @@ std::string handleRequest(const std::string& request_data) {
             // For redemption, we need to use a special transaction where the sender is COINBASE
             // This allows us to bypass the balance check since we're redeeming from the blockchain itself
             Transaction tx("COINBASE", redeemer, 25.5, true);  // Using standard amount for demo
-            tx.signTransaction("demo-key");
+            // COINBASE transactions don't need signing as they're system-generated
             
             // Add to pending transactions
             if (blockchain.addTransaction(tx)) {

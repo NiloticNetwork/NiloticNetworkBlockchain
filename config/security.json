@@ -1,0 +1,49 @@
+{
+    "security": {
+        "https_only": false,
+        "rate_limiting": {
+            "enabled": true,
+            "requests_per_minute": 60,
+            "requests_per_hour": 1000,
+            "block_duration_minutes": 5
+        },
+        "password_policy": {
+            "min_length": 12,
+            "max_length": 128,
+            "require_uppercase": true,
+            "require_lowercase": true,
+            "require_numbers": true,
+            "require_special_chars": true,
+            "block_common_patterns": true
+        },
+        "logging": {
+            "enabled": true,
+            "log_file": "logs/security.log",
+            "log_level": "INFO",
+            "log_security_events": true,
+            "log_api_access": true,
+            "log_transactions": true
+        },
+        "cors": {
+            "enabled": true,
+            "allowed_origins": [
+                "http://localhost:3000",
+                "http://localhost:5000",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5000"
+            ]
+        },
+        "headers": {
+            "x_content_type_options": "nosniff",
+            "x_frame_options": "DENY",
+            "x_xss_protection": "1; mode=block",
+            "referrer_policy": "strict-origin-when-cross-origin",
+            "content_security_policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        },
+        "input_validation": {
+            "max_request_size": 100000,
+            "max_parameters": 100,
+            "sanitize_inputs": true
+        }
+    }
+}

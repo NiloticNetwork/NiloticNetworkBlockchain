@@ -18,7 +18,8 @@ private:
     
     void serverLoop();
     void handleClient(int client_fd, struct sockaddr_in client_addr);
-    std::string generateResponse(const std::string& method, const std::string& path, const std::string& body);
+    std::string generateResponse(const std::string& method, const std::string& path, const std::map<std::string, std::string>& headers, const std::string& body);
+    bool isAuthorized(const std::map<std::string, std::string>& headers, const std::string& method) const;
 
 public:
     API(Blockchain& blockchain);
