@@ -40,6 +40,7 @@ add_executable(nilotic_blockchain
     src/core/mining.cpp
     src/core/networking.cpp
     src/core/porc.cpp
+    src/core/unified_consensus.cpp
     src/core/rate_limiter.cpp
     src/core/security_middleware.cpp
     src/core/smart_contract_vm.cpp

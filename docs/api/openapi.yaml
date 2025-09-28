@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: Nilotic Blockchain API
+  version: 0.1.0
+  description: Minimal spec for public endpoints
+servers:
+  - url: http://localhost:5500
+paths:
+  /:
+    get:
+      summary: Get blockchain info
+      responses:
+        '200':
+          description: Info
+  /balance:
+    get:
+      summary: Get balance for address
+      parameters:
+        - in: query
+          name: address
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Balance
+  /mine:
+    post:
+      summary: Mine a block to address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                miner_address:
+                  type: string
+      responses:
+        '200':
+          description: Mined block
+  /transaction:
+    post:
+      summary: Submit a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sender:
+                  type: string
+                recipient:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Tx accepted
+
+

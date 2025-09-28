@@ -1,6 +1,6 @@
 # Nilotic Blockchain
 
-A production-ready blockchain application written in C++ that implements a full-featured blockchain with smart contract functionality, Proof-of-Stake consensus, token management, and Odero SLW tokens for offline payments.
+An open, lightweight C++ blockchain focused on inclusive finance in Africa: low‑bandwidth, offline‑first payments with transparent, programmable settlement and corridor FX. Built for real‑world constraints (feature phones, agents, and spotty connectivity).
 
 ## 🚀 Quick Start
 
@@ -21,14 +21,14 @@ open web/wallet/index.html
 
 ## 📋 Features
 
-- **Core Blockchain**: Secure, efficient, and scalable blockchain architecture
-- **Proof-of-Stake Consensus**: Energy-efficient consensus mechanism
+- **Offline-first payments**: Local acknowledgements and delayed on‑chain settlement
+- **Low-bandwidth operation**: USSD/SMS agent flows, lightweight nodes
+- **Proof-of-Stake**: Energy‑efficient consensus
 - **Native Token**: Sulwe (SLW) with 1 SLW = 1,000,000 Lut precision
-- **Odero SLW Tokens**: Offline payment capabilities
-- **Smart Contracts**: Basic smart contract system
-- **Web Wallet**: Browser-based wallet interface
-- **API Interface**: RESTful API for blockchain interaction
-- **SQLite Persistence**: Reliable data storage
+- **Odero SLW Tokens**: Offline payment capabilities for cash‑dominant contexts
+- **Smart Contracts**: Basic programmable logic
+- **API Interface**: RESTful API with OpenAPI spec
+- **SQLite Persistence**: Reliable data storage (WAL recommended)
 
 ## 🏗️ Project Structure
 
@@ -179,7 +179,18 @@ python3 web/wallet/nilotic_wallet.py --url http://localhost:5500 send --address 
 
 ## 📚 Documentation
 
-- [API Documentation](docs/api/README.md) - Complete API reference
+- [Value Proposition](docs/VALUE_PROPOSITION.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Business Model](docs/BUSINESS_MODEL.md)
+- [Tokenomics](docs/TOKENOMICS.md)
+- [Team](docs/TEAM.md)
+- [Partnerships](docs/PARTNERSHIPS.md)
+- [Compliance Strategy](docs/COMPLIANCE.md)
+- [Security Audit Plan](docs/SECURITY_AUDIT_PLAN.md)
+- [Traction Plan](docs/TRACION_PLAN.md)
+- [Grants & Accelerators](docs/GRANTS_AND_ACCELERATORS.md)
+- [OpenAPI Spec](docs/api/openapi.yaml)
+- [API Documentation](docs/api/README.md)
 - [User Guide](docs/user/README.md) - How to use the blockchain
 - [Developer Guide](docs/developer/README.md) - How to extend the blockchain
 - [Installation Guide](INSTALL.md) - Detailed installation instructions
