@@ -6,7 +6,7 @@ A production-ready blockchain application written in C++ that implements a full-
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/NiloticNetwork/NiloticNetworkBlockchain
 cd nilotic-blockchain
 
 # Build the application

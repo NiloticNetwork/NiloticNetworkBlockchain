@@ -66,29 +66,43 @@ public:
         return Utils::calculateSHA256(ss.str());
     }
     
-    // Sign the transaction
-    void signTransaction(const std::string& signingKey) {
+    // Sign the transaction with proper cryptographic signing
+    bool signTransaction(const std::string& privateKeyPEM) {
         if (sender == "COINBASE") {
             // Coinbase transactions don't need signing
-            return;
-        }
-        
-        // In a real implementation, this would use proper cryptographic signing
-        // For now, we'll just simulate it by combining the key with the hash
-        std::string data = hash + signingKey;
-        signature = Utils::calculateSHA256(data);
-    }
-    
-    // Verify the transaction signature
-    bool verifySignature() const {
-        if (sender == "COINBASE") {
-            // Coinbase transactions are always valid
+            signature = "COINBASE_SIGNATURE";
             return true;
         }
         
-        // In a real implementation, this would verify the cryptographic signature
-        // For now, we'll accept any non-empty signature as valid
+        if (privateKeyPEM.empty()) {
+            // Reject empty keys
+            return false;
+        }
+        
+        // Additional validation to prevent weak keys
+        if (privateKeyPEM.length() < 100) {
+            // Reject keys that are too short to be valid PEM
+            return false;
+        }
+        
+        // Use proper ECDSA signing with OpenSSL
+        signature = Utils::signData(hash, privateKeyPEM);
         return !signature.empty();
+    }
+    
+    // Verify the transaction signature with proper cryptographic verification
+    bool verifySignature(const std::string& publicKeyPEM) const {
+        if (sender == "COINBASE") {
+            // Coinbase transactions are always valid
+            return signature == "COINBASE_SIGNATURE";
+        }
+        
+        if (signature.empty() || publicKeyPEM.empty()) {
+            return false;
+        }
+        
+        // Use proper ECDSA verification with OpenSSL
+        return Utils::verifySignature(hash, signature, publicKeyPEM);
     }
     
     // Check if transaction is valid

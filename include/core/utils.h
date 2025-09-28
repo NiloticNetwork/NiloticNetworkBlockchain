@@ -309,6 +309,13 @@ public:
         
         return createJsonResponse(status_code, error);
     }
+    
+    // Cryptographic functions for secure signing and verification
+    static std::string signData(const std::string& data, const std::string& privateKeyPEM);
+    static bool verifySignature(const std::string& data, const std::string& signature, const std::string& publicKeyPEM);
+    static std::string generateKeyPair(std::string& publicKeyPEM);
+    static bool validateInput(const std::string& input, size_t maxLength = 1024);
+    static std::string sanitizeInput(const std::string& input);
 };
 
 #endif // UTILS_H

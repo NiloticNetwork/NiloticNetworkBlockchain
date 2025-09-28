@@ -127,3 +127,5 @@ Dockerfile.local
 local/
 dev/
 test-data/ 
+# Local web apps
+web/

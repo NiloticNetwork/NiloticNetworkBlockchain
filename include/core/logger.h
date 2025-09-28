@@ -20,6 +20,8 @@ class Logger {
 private:
     static std::mutex logMutex;
     static LogLevel minLevel;
+    static std::string logFilePath;
+    static bool logToFile;
 
     static std::string getTimestamp() {
         auto now = std::chrono::system_clock::now();
@@ -53,16 +55,7 @@ public:
         minLevel = level;
     }
     
-    static void log(LogLevel level, const std::string& message) {
-        if (level < minLevel) return;
-        
-        std::lock_guard<std::mutex> lock(logMutex);
-        
-        std::string levelStr = levelToString(level);
-        std::string timestamp = getTimestamp();
-        
-        std::cout << "[" << timestamp << "] [" << levelStr << "] " << message << std::endl;
-    }
+    static void log(LogLevel level, const std::string& message);
     
     static void debug(const std::string& message) {
         log(LogLevel::DEBUG, message);
@@ -83,6 +76,18 @@ public:
     static void critical(const std::string& message) {
         log(LogLevel::CRITICAL, message);
     }
+    
+    // Security-specific logging methods
+    static void logSecurityEvent(const std::string& event, const std::string& clientIP = "", const std::string& details = "");
+    static void logAuthentication(const std::string& user, bool success, const std::string& clientIP = "");
+    static void logTransaction(const std::string& txHash, const std::string& sender, const std::string& recipient, double amount);
+    static void logBlockMined(const std::string& blockHash, const std::string& miner, int blockIndex);
+    static void logApiAccess(const std::string& endpoint, const std::string& method, const std::string& clientIP, int statusCode);
+    
+    // Configuration methods
+    static void enableFileLogging(const std::string& filePath);
+    static void disableFileLogging();
+    static void setLogFile(const std::string& filePath) { logFilePath = filePath; }
 };
 
 #endif // LOGGER_H

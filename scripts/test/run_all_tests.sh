@@ -12,6 +12,26 @@ NC='\033[0m'
 
 echo -e "${BLUE}🧪 Running All Tests${NC}"
 
+# Function to run security tests
+run_security_tests() {
+    echo -e "${BLUE}🔒 Running security tests...${NC}"
+    
+    # Check if security test executable exists
+    if [ -f "build/security_tests" ]; then
+        echo -e "${YELLOW}Running security test suite...${NC}"
+        if ./build/security_tests; then
+            echo -e "${GREEN}✅ Security tests passed${NC}"
+            ((PASSED_TESTS++))
+        else
+            echo -e "${RED}❌ Security tests failed${NC}"
+            ((FAILED_TESTS++))
+        fi
+        ((TOTAL_TESTS++))
+    else
+        echo -e "${YELLOW}⚠️  Security tests not built${NC}"
+    fi
+}
+
 # Configuration
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -173,6 +193,7 @@ main() {
     run_config_tests
     
     # Run specific test suites
+    run_security_tests
     run_test_suite "Unit Tests" "scripts/test/run_unit_tests.sh"
     run_test_suite "Integration Tests" "scripts/test/run_integration_tests.sh"
     

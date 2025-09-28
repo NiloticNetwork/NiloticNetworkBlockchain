@@ -25,7 +25,7 @@ include_directories(
     ${OPENSSL_INCLUDE_DIR}
 )
 
-# Add all source files (excluding problematic files for now)
+# Add all source files including new security components
 add_executable(nilotic_blockchain 
     src/core/main.cpp
     src/core/blockchain.cpp
@@ -40,6 +40,9 @@ add_executable(nilotic_blockchain
     src/core/mining.cpp
     src/core/networking.cpp
     src/core/porc.cpp
+    src/core/rate_limiter.cpp
+    src/core/security_middleware.cpp
+    src/core/smart_contract_vm.cpp
 )
 
 # Find SQLite3 - use pkg-config approach for better compatibility
