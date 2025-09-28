@@ -17,13 +17,13 @@
 
 // Mining configuration
 struct MiningConfig {
-    uint64_t targetDifficulty = 4;           // Target difficulty (leading zeros)
-    uint64_t maxDifficulty = 8;              // Maximum difficulty
-    uint64_t minDifficulty = 2;              // Minimum difficulty
+    uint64_t targetDifficulty = 2;           // Target difficulty (leading zeros)
+    uint64_t maxDifficulty = 6;              // Maximum difficulty
+    uint64_t minDifficulty = 1;              // Minimum difficulty
     uint64_t difficultyAdjustmentBlocks = 2016; // Blocks between difficulty adjustments
-    uint64_t targetBlockTime = 600;          // Target block time in seconds (10 minutes)
+    uint64_t targetBlockTime = 30;          // Target block time in seconds (10 minutes)
     uint64_t maxBlockSize = 1024 * 1024;    // Maximum block size in bytes
-    uint64_t maxTransactionsPerBlock = 1000; // Maximum transactions per block
+    uint64_t maxTransactionsPerBlock = 5000; // Maximum transactions per block
     double miningReward = 100.0;             // Mining reward in coins
     double transactionFee = 0.001;           // Transaction fee in coins
     bool enableDynamicDifficulty = true;     // Enable dynamic difficulty adjustment

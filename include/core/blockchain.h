@@ -208,7 +208,7 @@ public:
         newBlock.addTransaction(coinbaseTx);
         
         // Add pending transactions to the block (up to a limit)
-        const size_t MAX_TRANSACTIONS_PER_BLOCK = 10;
+        const size_t MAX_TRANSACTIONS_PER_BLOCK = 50;
         size_t count = 0;
         
         while (!pendingTransactions.empty() && count < MAX_TRANSACTIONS_PER_BLOCK) {
