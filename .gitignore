@@ -128,3 +128,5 @@ local/
 dev/
 test-data/ 
 ./web/*
+# Local web apps
+web/

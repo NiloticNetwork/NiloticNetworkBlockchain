@@ -166,7 +166,7 @@ void API::handleClient(int client_fd, struct sockaddr_in client_addr) {
     Utils::logInfo("Parsed path: '" + path + "'");
     
     // Generate response
-    std::string response = generateResponse(method, path, body);
+    std::string response = generateResponse(method, path, headers, body);
     
     // Send response
     ssize_t bytes_sent = send(client_fd, response.c_str(), response.length(), 0);
@@ -179,7 +179,20 @@ void API::handleClient(int client_fd, struct sockaddr_in client_addr) {
 }
 
 // Generate HTTP response
-std::string API::generateResponse(const std::string& method, const std::string& path, const std::string& body) {
+bool API::isAuthorized(const std::map<std::string, std::string>& headers, const std::string& method) const {
+    // Require Authorization: Bearer <token> for mutating endpoints (POST)
+    if (method != "POST") return true;
+    auto it = headers.find("Authorization");
+    if (it == headers.end()) return false;
+    const std::string& auth = it->second;
+    const std::string prefix = "Bearer ";
+    if (auth.rfind(prefix, 0) != 0) return false;
+    const std::string token = auth.substr(prefix.size());
+    // TODO: load from config/ENV; minimal check here
+    return !token.empty();
+}
+
+std::string API::generateResponse(const std::string& method, const std::string& path, const std::map<std::string, std::string>& headers, const std::string& body) {
     nlohmann::json response;
     std::string status = "200 OK";
     
@@ -312,6 +325,10 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             }
         }
         else if (path == "/transaction" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
             // Create transaction
             try {
                 nlohmann::json tx_data = nlohmann::json::parse(body);
@@ -334,8 +351,13 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                 response["error"] = e.what();
                 status = "400 Bad Request";
             }
+            }
         }
         else if (path == "/mine" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
             // Mine a new block
             try {
                 nlohmann::json mine_data = nlohmann::json::parse(body);
@@ -367,6 +389,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             } catch (const std::exception& e) {
                 response["error"] = e.what();
                 status = "400 Bad Request";
+            }
             }
         }
         else if (path == "/mining/status" && method == "GET") {
@@ -407,7 +430,69 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             response["message"] = "Mining stopped successfully";
             response["isMining"] = miningEngine.isMiningActive();
         }
+        else if (path == "/network/status" && method == "GET") {
+            // Get network status
+            response["status"] = "success";
+            response["isRunning"] = false; // TODO: get from network engine
+            response["activeConnections"] = 0;
+            response["totalPeers"] = 0;
+            response["totalMessagesReceived"] = 0;
+            response["totalMessagesSent"] = 0;
+            response["listenPort"] = 8333;
+        }
+        else if (path == "/network/peers" && method == "GET") {
+            // Get peer list
+            response["status"] = "success";
+            response["peers"] = nlohmann::json::array();
+            // TODO: get actual peers from network engine
+        }
+        else if (path == "/network/connect" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
+            // Connect to peer
+            try {
+                nlohmann::json connect_data = nlohmann::json::parse(body);
+                std::string address = connect_data["address"];
+                uint16_t port = connect_data["port"];
+                
+                // TODO: connect to peer using network engine
+                response["status"] = "success";
+                response["message"] = "Connection request sent";
+                response["address"] = address;
+                response["port"] = port;
+            } catch (const std::exception& e) {
+                response["error"] = e.what();
+                status = "400 Bad Request";
+            }
+            }
+        }
+        else if (path == "/network/disconnect" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
+            // Disconnect from peer
+            try {
+                nlohmann::json disconnect_data = nlohmann::json::parse(body);
+                std::string address = disconnect_data["address"];
+                
+                // TODO: disconnect from peer using network engine
+                response["status"] = "success";
+                response["message"] = "Disconnection request sent";
+                response["address"] = address;
+            } catch (const std::exception& e) {
+                response["error"] = e.what();
+                status = "400 Bad Request";
+            }
+            }
+        }
         else if (path == "/token" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
             // Create token
             try {
                 nlohmann::json token_data = nlohmann::json::parse(body);
@@ -424,6 +509,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                 response["error"] = e.what();
                 status = "400 Bad Request";
             }
+            }
         }
         else if (path == "/wallet/create" && method == "POST") {
             // Create new wallet
@@ -438,7 +524,7 @@ std::string API::generateResponse(const std::string& method, const std::string& 
                     response["message"] = "Wallet created successfully";
                     response["address"] = wallet.getAddress();
                     response["name"] = wallet.getName();
-                    response["seedPhrase"] = wallet.toMnemonic(password);
+                    // Do not return seed phrase or private key via API
                 } else {
                     response["error"] = "Failed to create wallet";
                     status = "400 Bad Request";

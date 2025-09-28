@@ -239,6 +239,12 @@ public:
         }
     }
     
+    // Security validation for contracts
+    bool validateContract(const std::string& sourceCode);
+    
+    // Secure contract execution with sandboxing
+    bool executeSecure(SmartContractContext& context, const std::vector<uint8_t>& code);
+    
     // Compile simple contract (placeholder)
     std::vector<uint8_t> compileContract(const std::string& sourceCode) {
         // This is a simplified compiler

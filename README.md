@@ -6,7 +6,7 @@ An open, lightweight C++ blockchain focused on inclusive finance in Africa: lowâ
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/NiloticNetwork/NiloticNetworkBlockchain
 cd nilotic-blockchain
 
 # Build the application
