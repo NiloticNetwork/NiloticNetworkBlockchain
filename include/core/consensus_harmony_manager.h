@@ -2,14 +2,14 @@
 #define CONSENSUS_HARMONY_MANAGER_H
 
 #include "consensus_harmony.h"
+#include "consensus_router.h"
+#include "consensus_balancer.h"
+#include "consensus_monitor.h"
 #include <memory>
 #include <thread>
 #include <condition_variable>
 
 // Forward declarations
-class ConsensusRouter;
-class ConsensusBalancer;
-class ConsensusMonitor;
 class Blockchain;
 
 /**
