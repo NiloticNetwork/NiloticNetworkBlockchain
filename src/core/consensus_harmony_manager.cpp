@@ -63,15 +63,13 @@ bool ConsensusHarmonyManager::initializeConsensus(const ConsensusConfig& customC
 }
 
 void ConsensusHarmonyManager::shutdown() {
-    std::lock_guard<std::mutex> lock(managerMutex);
-    
     if (!initialized.load()) {
         return;
     }
     
     Logger::info("Shutting down Consensus Harmony Manager");
     
-    // Stop management thread
+    // Stop management thread - do this without holding the lock
     shouldStop = true;
     running = false;
     managerCV.notify_all();
@@ -79,6 +77,9 @@ void ConsensusHarmonyManager::shutdown() {
     if (managementThread.joinable()) {
         managementThread.join();
     }
+    
+    // Now acquire lock for final cleanup
+    std::lock_guard<std::mutex> lock(managerMutex);
     
     // Shutdown components
     shutdownComponents();
@@ -158,22 +159,23 @@ ConsensusResult ConsensusHarmonyManager::processConsensusRequest(const Consensus
     }
     
     try {
-        // For now, return a basic validation result
-        // This will be enhanced when we implement the router component
         Logger::info("Processing consensus request: " + request.requestId);
         
-        // Basic validation - in a real implementation, this would route to appropriate engines
-        bool isValid = true;
-        double confidence = 1.0;
-        std::string reason = "Basic validation passed";
+        // Route the request through the consensus router
+        ConsensusResult result;
+        if (router) {
+            result = router->routeValidation(request);
+        } else {
+            // Fallback to basic validation if router is not available
+            result = ConsensusResult(true, ConsensusType::PROOF_OF_WORK, 1.0, "Basic validation passed");
+        }
         
-        // Create result
-        ConsensusResult result(isValid, ConsensusType::PROOF_OF_WORK, confidence, reason);
+        // Add metadata
         result.metadata["requestId"] = request.requestId;
         result.metadata["processedBy"] = "ConsensusHarmonyManager";
         
         Logger::info("Consensus request processed: " + request.requestId + 
-                    " - Result: " + (isValid ? "VALID" : "INVALID"));
+                    " - Result: " + (result.isValid ? "VALID" : "INVALID"));
         
         return result;
         
@@ -471,13 +473,60 @@ bool ConsensusHarmonyManager::validateConfiguration(const ConsensusConfig& confi
 
 void ConsensusHarmonyManager::initializeComponents() {
     // Initialize router, balancer, and monitor components
-    // These will be implemented in subsequent tasks
     Logger::info("Initializing consensus harmony components");
+    
+    try {
+        // Initialize router
+        router = std::make_unique<ConsensusRouter>();
+        if (!router->initialize()) {
+            throw std::runtime_error("Failed to initialize ConsensusRouter");
+        }
+        
+        // Initialize balancer
+        balancer = std::make_unique<ConsensusBalancer>();
+        if (!balancer->initialize()) {
+            throw std::runtime_error("Failed to initialize ConsensusBalancer");
+        }
+        
+        // Initialize monitor
+        monitor = std::make_unique<ConsensusMonitor>();
+        if (!monitor->initialize()) {
+            throw std::runtime_error("Failed to initialize ConsensusMonitor");
+        }
+        
+        Logger::info("All consensus harmony components initialized successfully");
+        
+    } catch (const std::exception& e) {
+        Logger::error("Failed to initialize consensus harmony components: " + std::string(e.what()));
+        throw;
+    }
 }
 
 void ConsensusHarmonyManager::shutdownComponents() {
     // Shutdown all components
     Logger::info("Shutting down consensus harmony components");
+    
+    try {
+        if (monitor) {
+            monitor->shutdown();
+            monitor.reset();
+        }
+        
+        if (balancer) {
+            balancer->shutdown();
+            balancer.reset();
+        }
+        
+        if (router) {
+            router->shutdown();
+            router.reset();
+        }
+        
+        Logger::info("All consensus harmony components shut down successfully");
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error during component shutdown: " + std::string(e.what()));
+    }
 }
 
 void ConsensusHarmonyManager::logEvent(const std::string& event, const nlohmann::json& data) const {
