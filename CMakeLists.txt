@@ -25,7 +25,7 @@ include_directories(
     ${OPENSSL_INCLUDE_DIR}
 )
 
-# Add all source files including new security components
+# Add all source files including new security and consensus harmony components
 add_executable(nilotic_blockchain 
     src/core/main.cpp
     src/core/blockchain.cpp
@@ -44,6 +44,8 @@ add_executable(nilotic_blockchain
     src/core/rate_limiter.cpp
     src/core/security_middleware.cpp
     src/core/smart_contract_vm.cpp
+    src/core/consensus_harmony.cpp
+    src/core/consensus_harmony_manager.cpp
 )
 
 # Find SQLite3 - use pkg-config approach for better compatibility
@@ -65,3 +67,49 @@ target_link_directories(nilotic_blockchain PRIVATE ${SQLITE3_LIBRARY_DIRS})
 
 # Install
 install(TARGETS nilotic_blockchain DESTINATION bin)
+
+# Enable testing
+enable_testing()
+
+# Find Google Test
+find_package(GTest QUIET)
+
+if(GTest_FOUND)
+    # Add test executable
+    add_executable(consensus_harmony_tests
+        tests/consensus_harmony_test.cpp
+        src/core/consensus_harmony.cpp
+        src/core/consensus_harmony_manager.cpp
+        src/core/blockchain.cpp
+        src/core/block.cpp
+        src/core/transaction.cpp
+        src/core/utils.cpp
+        src/core/logger.cpp
+    )
+    
+    # Link test libraries
+    target_link_libraries(consensus_harmony_tests
+        GTest::gtest
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+        OpenSSL::Crypto
+        OpenSSL::SSL
+        ${SQLITE3_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+    )
+    
+    # Add test include directories
+    target_include_directories(consensus_harmony_tests PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/core
+        ${SQLITE3_INCLUDE_DIRS}
+    )
+    
+    # Register test
+    add_test(NAME ConsensusHarmonyTests COMMAND consensus_harmony_tests)
+    
+    message(STATUS "Google Test found - consensus harmony tests enabled")
+else()
+    message(WARNING "Google Test not found - consensus harmony tests disabled")
+endif()
