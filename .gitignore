@@ -129,3 +129,6 @@ dev/
 test-data/ 
 # Local web apps
 web/
+test_*
+*.dSYM/
+.kiro/
