@@ -1,0 +1,190 @@
+# CI/CD Configuration for Consensus Integration Tests
+# This file can be used with various CI/CD systems (GitHub Actions, GitLab CI, etc.)
+
+name: Consensus Integration Tests
+
+# Test configuration
+test_config:
+  # Test execution settings
+  parallel_execution: true
+  max_concurrent_tests: 4
+  timeout_minutes: 30
+  
+  # Performance thresholds
+  performance_thresholds:
+    transaction_validation_ms: 10.0
+    block_mining_ms: 1000.0
+    conflict_resolution_ms: 100.0
+    emergency_mode_activation_ms: 500.0
+  
+  # Test categories to run
+  test_categories:
+    - comprehensive_integration
+    - end_to_end_workflows
+    - stress_tests
+    - automated_suite
+  
+  # Reporting configuration
+  reporting:
+    generate_html_reports: true
+    generate_junit_xml: true
+    save_performance_metrics: true
+    archive_test_logs: true
+    
+  # Failure handling
+  failure_handling:
+    continue_on_failure: false
+    retry_failed_tests: 1
+    notify_on_failure: true
+
+# Environment requirements
+environment:
+  os: ubuntu-latest
+  compiler: g++
+  cpp_standard: c++17
+  
+  # Required packages
+  packages:
+    - build-essential
+    - libssl-dev
+    - libcrypto++-dev
+    - libsqlite3-dev
+    - cmake
+    - make
+  
+  # Environment variables
+  env_vars:
+    CONSENSUS_TEST_MODE: "CI"
+    CONSENSUS_LOG_LEVEL: "INFO"
+    CONSENSUS_PERFORMANCE_MODE: "BENCHMARK"
+
+# Test stages
+stages:
+  - name: "Prerequisites Check"
+    description: "Verify build environment and dependencies"
+    commands:
+      - "g++ --version"
+      - "make --version"
+      - "ls -la lib/"
+    
+  - name: "Build Verification"
+    description: "Ensure all test executables can be built"
+    commands:
+      - "make -f tests/Makefile_comprehensive_consensus_integration clean all"
+      - "make -f tests/Makefile_consensus_end_to_end clean all"
+      - "make -f tests/Makefile_consensus_stress clean all"
+      - "make -f tests/Makefile_automated_consensus_suite clean all"
+    
+  - name: "Core Integration Tests"
+    description: "Run comprehensive consensus integration tests"
+    commands:
+      - "make -f tests/Makefile_comprehensive_consensus_integration test"
+    timeout: 10
+    
+  - name: "End-to-End Workflow Tests"
+    description: "Run complete workflow tests"
+    commands:
+      - "make -f tests/Makefile_consensus_end_to_end test"
+    timeout: 5
+    
+  - name: "Stress Tests"
+    description: "Run stress tests under controlled conditions"
+    commands:
+      - "make -f tests/Makefile_consensus_stress test"
+    timeout: 10
+    allow_failure: true  # Stress tests may fail under resource constraints
+    
+  - name: "Automated Test Suite"
+    description: "Run comprehensive automated test suite"
+    commands:
+      - "make -f tests/Makefile_automated_consensus_suite test"
+    timeout: 15
+    
+  - name: "Full Test Suite"
+    description: "Run all tests using the master script"
+    commands:
+      - "./tests/run_all_consensus_integration_tests.sh"
+    timeout: 30
+
+# Artifacts to collect
+artifacts:
+  - path: "test_reports/"
+    name: "test-reports"
+    expire_in: "30 days"
+  - path: "*.log"
+    name: "test-logs"
+    expire_in: "7 days"
+  - path: "test_*"
+    name: "test-executables"
+    expire_in: "1 day"
+
+# Notifications
+notifications:
+  on_success:
+    - type: "slack"
+      message: "✅ Consensus integration tests passed"
+  on_failure:
+    - type: "slack"
+      message: "❌ Consensus integration tests failed"
+    - type: "email"
+      recipients: ["dev-team@nilotic-blockchain.com"]
+
+# Performance monitoring
+performance_monitoring:
+  enabled: true
+  metrics:
+    - transaction_throughput
+    - block_mining_time
+    - conflict_resolution_time
+    - memory_usage
+    - cpu_usage
+  
+  alerts:
+    - metric: "transaction_throughput"
+      threshold: "< 100 tx/sec"
+      action: "warn"
+    - metric: "block_mining_time"
+      threshold: "> 2000ms"
+      action: "fail"
+    - metric: "memory_usage"
+      threshold: "> 1GB"
+      action: "warn"
+
+# Regression testing
+regression_testing:
+  enabled: true
+  baseline_branch: "main"
+  performance_regression_threshold: 20  # 20% slower is considered regression
+  
+  comparison_metrics:
+    - transaction_validation_time
+    - block_mining_time
+    - conflict_resolution_time
+    - system_startup_time
+
+# Security scanning
+security_scanning:
+  enabled: true
+  tools:
+    - "cppcheck"
+    - "valgrind"
+  
+  checks:
+    - memory_leaks
+    - buffer_overflows
+    - null_pointer_dereferences
+    - uninitialized_variables
+
+# Documentation
+documentation:
+  test_coverage_report: true
+  api_documentation: true
+  performance_benchmarks: true
+  
+  outputs:
+    - format: "html"
+      path: "test_reports/coverage.html"
+    - format: "json"
+      path: "test_reports/results.json"
+    - format: "junit"
+      path: "test_reports/junit.xml"
