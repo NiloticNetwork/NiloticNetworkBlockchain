@@ -1,0 +1,55 @@
+# Simple Makefile for Consensus Monitor Metrics Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include
+LIBS = -pthread
+
+# Source files
+MONITOR_SOURCES = src/core/consensus_monitor.cpp \
+                 src/core/consensus_harmony.cpp \
+                 src/core/logger.cpp
+
+TEST_SOURCES = tests/test_consensus_monitor_metrics_simple.cpp
+
+# Object files
+MONITOR_OBJECTS = $(MONITOR_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_monitor_metrics_simple
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(MONITOR_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(MONITOR_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+	rm -f test_export_simple.json
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all    - Build the test executable"
+	@echo "  test   - Run all tests"
+	@echo "  clean  - Clean build artifacts"
+	@echo "  debug  - Build with debug symbols"
+	@echo "  help   - Show this help message"
+
+.PHONY: all test clean debug help

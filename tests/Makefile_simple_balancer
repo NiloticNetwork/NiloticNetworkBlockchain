@@ -1,0 +1,45 @@
+# Simple Makefile for Consensus Balancer Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -I../include/core -I../lib/nlohmann_json/single_include
+LDFLAGS = -pthread
+
+# Source files
+CORE_SOURCES = ../src/core/consensus_balancer.cpp \
+               ../src/core/consensus_harmony.cpp \
+               ../src/core/logger.cpp \
+               ../src/core/utils.cpp
+
+TEST_SOURCES = simple_consensus_balancer_test.cpp
+
+# Object files
+CORE_OBJECTS = $(CORE_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = simple_consensus_balancer_test
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(CORE_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CORE_OBJECTS) $(TEST_OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile core source files
+../src/core/%.o: ../src/core/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile test source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(TARGET) $(CORE_OBJECTS) $(TEST_OBJECTS)
+
+.PHONY: all test clean

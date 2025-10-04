@@ -1,0 +1,28 @@
+CXX = g++
+OPENSSL_PREFIX = /opt/homebrew/opt/openssl@3
+CXXFLAGS = -std=c++17 -Wall -Wextra -I../include -I../include/core -I.. -I$(OPENSSL_PREFIX)/include
+LDFLAGS = -L$(OPENSSL_PREFIX)/lib -lcrypto -lssl -lsqlite3 -lpthread
+
+SRCDIR = ../src/core
+SOURCES = $(SRCDIR)/proof_of_resource_contribution.cpp \
+          $(SRCDIR)/consensus_harmony.cpp \
+          $(SRCDIR)/block.cpp \
+          $(SRCDIR)/transaction.cpp \
+          $(SRCDIR)/utils.cpp \
+          $(SRCDIR)/logger.cpp
+
+TARGET = test_porc_simple
+TEST_SOURCE = test_porc_simple.cpp
+
+all: $(TARGET)
+
+$(TARGET): $(TEST_SOURCE) $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(TEST_SOURCE) $(SOURCES) $(LDFLAGS)
+
+run: $(TARGET)
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all run clean

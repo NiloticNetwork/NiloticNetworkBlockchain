@@ -1,0 +1,36 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I../include -I../lib/nlohmann_json/single_include -pthread
+LDFLAGS = -lgtest -lgtest_main -pthread
+
+# Source files
+SOURCES = consensus_config_governance_test.cpp \
+          ../src/core/consensus_config_manager.cpp \
+          ../src/core/consensus_harmony.cpp \
+          ../src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_config_governance
+
+# Default target
+all: $(TARGET)
+
+# Build target
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean target
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+.PHONY: all clean test

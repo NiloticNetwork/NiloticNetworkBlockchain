@@ -1,0 +1,90 @@
+# Makefile for ConflictResolver tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -Ilib/nlohmann_json/single_include
+LDFLAGS = -pthread
+
+# Source files
+SOURCES = tests/consensus_conflict_resolver_test.cpp \
+          src/core/consensus_conflict_resolver.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_conflict_resolver
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --verbose
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Clean all including backup files
+clean-all: clean
+	rm -f *~ ../*~ ../src/core/*~ ../include/core/*~
+
+# Install dependencies (if needed)
+install-deps:
+	@echo "Installing dependencies..."
+	@echo "Make sure nlohmann/json is available in ../lib/nlohmann_json/"
+
+# Debug build
+debug: CXXFLAGS += -g -DDEBUG
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -O2 -DNDEBUG
+release: $(TARGET)
+
+# Memory check with valgrind (if available)
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
+
+# Static analysis with cppcheck (if available)
+static-analysis:
+	cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem \
+		../src/core/consensus_conflict_resolver.cpp \
+		../include/core/consensus_conflict_resolver.h \
+		consensus_conflict_resolver_test.cpp
+
+# Format code (if clang-format is available)
+format:
+	clang-format -i ../src/core/consensus_conflict_resolver.cpp \
+		../include/core/consensus_conflict_resolver.h \
+		consensus_conflict_resolver_test.cpp
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build the test executable"
+	@echo "  test          - Build and run tests"
+	@echo "  test-verbose  - Build and run tests with verbose output"
+	@echo "  debug         - Build with debug symbols"
+	@echo "  release       - Build optimized release version"
+	@echo "  clean         - Remove build artifacts"
+	@echo "  clean-all     - Remove all generated files"
+	@echo "  memcheck      - Run tests with valgrind memory checking"
+	@echo "  static-analysis - Run static analysis with cppcheck"
+	@echo "  format        - Format source code with clang-format"
+	@echo "  help          - Show this help message"
+
+.PHONY: all test test-verbose clean clean-all install-deps debug release memcheck static-analysis format help

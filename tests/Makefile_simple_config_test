@@ -1,0 +1,45 @@
+# Simple Makefile for Consensus Configuration Manager Test
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include
+LIBS = -pthread
+
+# Source files
+SOURCES = tests/simple_config_test.cpp \
+          src/core/consensus_config_manager.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_simple_config
+
+# Default target
+all: $(TARGET)
+
+# Build target
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+	rm -f test_config*.json
+	rm -rf test_backups*
+	rm -f *.log
+
+# Clean and rebuild
+rebuild: clean all
+
+.PHONY: all test clean rebuild

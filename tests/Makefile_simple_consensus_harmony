@@ -1,0 +1,74 @@
+# Makefile for Simple Consensus Harmony Integration Test
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -lpthread -lssl -lcrypto
+
+# Source directories
+SRC_DIR = ../src/core
+TEST_DIR = .
+
+# Core source files needed for the test (minimal set)
+CORE_SOURCES = \
+    $(SRC_DIR)/blockchain.cpp \
+    $(SRC_DIR)/block.cpp \
+    $(SRC_DIR)/transaction.cpp \
+    $(SRC_DIR)/logger.cpp \
+    $(SRC_DIR)/utils.cpp \
+    $(SRC_DIR)/pos_consensus_engine.cpp \
+    $(SRC_DIR)/consensus_harmony.cpp \
+    $(SRC_DIR)/consensus_harmony_manager.cpp \
+    $(SRC_DIR)/consensus_router.cpp \
+    $(SRC_DIR)/consensus_balancer.cpp \
+    $(SRC_DIR)/consensus_monitor.cpp \
+    $(SRC_DIR)/consensus_security_validator.cpp \
+    $(SRC_DIR)/consensus_security_auditor.cpp \
+    $(SRC_DIR)/consensus_performance_optimizer.cpp \
+    $(SRC_DIR)/emergency_consensus_mode.cpp \
+    $(SRC_DIR)/consensus_harmony_integration.cpp \
+    $(SRC_DIR)/mining.cpp \
+    $(SRC_DIR)/voting_consensus_engine.cpp \
+    $(SRC_DIR)/proof_of_resource_contribution.cpp \
+    $(SRC_DIR)/smart_contract_consensus_engine.cpp \
+    $(SRC_DIR)/smart_contract_vm.cpp
+
+# Test source files
+TEST_SOURCES = \
+    $(TEST_DIR)/simple_consensus_harmony_test.cpp
+
+# Object files
+CORE_OBJECTS = $(CORE_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = simple_consensus_harmony_test
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(CORE_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile core source files
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile test source files
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run the test
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(CORE_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+
+# Clean all generated files
+clean-all: clean
+	rm -f *.log *.json *.db
+
+.PHONY: all test clean clean-all

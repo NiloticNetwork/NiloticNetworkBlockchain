@@ -1,0 +1,48 @@
+# Makefile for Smart Contract Integration Test
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include -Ilib/SQLiteCpp/include -Ilib/asio $(shell pkg-config --cflags openssl)
+LIBS = -pthread $(shell pkg-config --libs openssl)
+
+# Source files
+SOURCES = tests/smart_contract_integration_test.cpp \
+          src/core/smart_contract_consensus_engine.cpp \
+          src/core/smart_contract_vm.cpp \
+          src/core/blockchain.cpp \
+          src/core/block.cpp \
+          src/core/transaction.cpp \
+          src/core/logger.cpp \
+          src/core/utils.cpp \
+          src/core/pos_consensus_engine.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_sc_integration
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run integration test
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+.PHONY: all test clean debug

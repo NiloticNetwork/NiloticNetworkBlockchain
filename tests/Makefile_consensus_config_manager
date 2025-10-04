@@ -1,0 +1,101 @@
+# Makefile for Consensus Configuration Manager Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include -Ilib/SQLiteCpp/include
+LIBS = -lgtest -lgtest_main -pthread -lsqlite3
+
+# Source files
+SOURCES = tests/consensus_config_manager_test.cpp \
+          src/core/consensus_config_manager.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_config_manager
+
+# Default target
+all: $(TARGET)
+
+# Build target
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --gtest_verbose
+
+# Run specific test
+test-filter: $(TARGET)
+	./$(TARGET) --gtest_filter=$(FILTER)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+	rm -f test_config*.json
+	rm -rf test_backups*
+	rm -f *.log
+
+# Clean and rebuild
+rebuild: clean all
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y libgtest-dev libsqlite3-dev
+	cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp *.a /usr/lib
+
+# Install dependencies (macOS)
+install-deps-mac:
+	brew install googletest sqlite3
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+# Code coverage
+coverage: CXXFLAGS += --coverage
+coverage: LIBS += --coverage
+coverage: $(TARGET)
+	./$(TARGET)
+	gcov $(SOURCES)
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_report
+
+# Static analysis with cppcheck
+static-analysis:
+	cppcheck --enable=all --std=c++17 $(INCLUDES) $(SOURCES)
+
+# Format code
+format:
+	clang-format -i $(SOURCES) ../include/core/consensus_config_manager.h
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build the test executable"
+	@echo "  test             - Run all tests"
+	@echo "  test-verbose     - Run tests with verbose output"
+	@echo "  test-filter      - Run specific test (use FILTER=pattern)"
+	@echo "  clean            - Remove build artifacts"
+	@echo "  rebuild          - Clean and rebuild"
+	@echo "  install-deps     - Install dependencies (Ubuntu/Debian)"
+	@echo "  install-deps-mac - Install dependencies (macOS)"
+	@echo "  memcheck         - Run with valgrind memory checking"
+	@echo "  coverage         - Generate code coverage report"
+	@echo "  static-analysis  - Run static analysis with cppcheck"
+	@echo "  format           - Format code with clang-format"
+	@echo "  help             - Show this help message"
+
+.PHONY: all test test-verbose test-filter clean rebuild install-deps install-deps-mac memcheck coverage static-analysis format help

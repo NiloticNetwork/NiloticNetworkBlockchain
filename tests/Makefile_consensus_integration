@@ -1,0 +1,58 @@
+# Makefile for Consensus Integration Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include -Ilib/SQLiteCpp/include -Ilib/sqlite
+LIBS = -lpthread -lssl -lcrypto -ldl
+
+# Source files
+SRCDIR = src/core
+SOURCES = $(SRCDIR)/blockchain.cpp \
+          $(SRCDIR)/block.cpp \
+          $(SRCDIR)/transaction.cpp \
+          $(SRCDIR)/utils.cpp \
+          $(SRCDIR)/logger.cpp \
+          $(SRCDIR)/api.cpp \
+          $(SRCDIR)/consensus_harmony.cpp \
+          $(SRCDIR)/consensus_harmony_manager.cpp \
+          $(SRCDIR)/consensus_router.cpp \
+          $(SRCDIR)/consensus_balancer.cpp \
+          $(SRCDIR)/consensus_monitor.cpp \
+          $(SRCDIR)/emergency_consensus_mode.cpp \
+          $(SRCDIR)/consensus_config_manager.cpp \
+          $(SRCDIR)/parameter_adjuster.cpp \
+          $(SRCDIR)/pos_consensus_engine.cpp \
+          $(SRCDIR)/proof_of_resource_contribution.cpp \
+          $(SRCDIR)/smart_contract_consensus_engine.cpp \
+          $(SRCDIR)/voting_consensus_engine.cpp \
+          $(SRCDIR)/unified_transaction_validator.cpp \
+          $(SRCDIR)/consensus_conflict_resolver.cpp
+
+# Test file
+TEST_FILE = tests/consensus_integration_test.cpp
+
+# Output executable
+TARGET = test_consensus_integration
+
+# SQLite library
+SQLITE_LIB = lib/sqlite/sqlite3.c
+
+.PHONY: all clean test
+
+all: $(TARGET)
+
+$(TARGET): $(TEST_FILE) $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(TARGET) $(TEST_FILE) $(SOURCES) $(SQLITE_LIB) $(LIBS)
+
+test: $(TARGET)
+	@echo "Running Consensus Integration tests..."
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+help:
+	@echo "Available targets:"
+	@echo "  all     - Build the test executable"
+	@echo "  test    - Run the consensus integration tests"
+	@echo "  clean   - Remove built files"
+	@echo "  help    - Show this help message"

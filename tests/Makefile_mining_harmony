@@ -1,0 +1,81 @@
+# Makefile for Mining Harmony Integration Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include -I../lib/SQLiteCpp/include -I../lib/sqlite
+LIBS = -lgtest -lgtest_main -pthread -lssl -lcrypto -lsqlite3
+
+# Source directories
+SRC_DIR = ../src/core
+INCLUDE_DIR = ../include/core
+
+# Source files needed for mining harmony tests
+SOURCES = $(SRC_DIR)/mining.cpp \
+          $(SRC_DIR)/block.cpp \
+          $(SRC_DIR)/transaction.cpp \
+          $(SRC_DIR)/blockchain.cpp \
+          $(SRC_DIR)/utils.cpp \
+          $(SRC_DIR)/logger.cpp \
+          $(SRC_DIR)/consensus_harmony.cpp \
+          $(SRC_DIR)/consensus_harmony_manager.cpp \
+          $(SRC_DIR)/consensus_router.cpp
+
+# Test files
+TEST_SOURCES = mining_harmony_test.cpp
+
+# Object files (place in tests directory to avoid conflicts)
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,%.o,$(SOURCES))
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_mining_harmony
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile test files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --gtest_verbose
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TEST_OBJECTS) $(TARGET)
+
+# Clean all including backup files
+clean-all: clean
+	rm -f *~ *.bak
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y libgtest-dev libssl-dev libsqlite3-dev
+	cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp lib/*.a /usr/lib/
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all          - Build the test executable"
+	@echo "  test         - Build and run tests"
+	@echo "  test-verbose - Build and run tests with verbose output"
+	@echo "  clean        - Remove build artifacts"
+	@echo "  clean-all    - Remove all generated files"
+	@echo "  install-deps - Install required dependencies"
+	@echo "  help         - Show this help message"
+
+.PHONY: all test test-verbose clean clean-all install-deps help

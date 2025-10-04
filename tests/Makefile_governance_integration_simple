@@ -1,0 +1,36 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -Ilib/nlohmann_json/single_include -pthread
+LDFLAGS = -pthread
+
+# Source files
+SOURCES = tests/test_governance_integration_simple.cpp \
+          src/core/consensus_config_manager.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_governance_integration_simple
+
+# Default target
+all: $(TARGET)
+
+# Build target
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean target
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+.PHONY: all clean test

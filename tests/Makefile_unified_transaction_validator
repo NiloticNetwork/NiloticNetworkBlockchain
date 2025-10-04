@@ -1,0 +1,95 @@
+# Makefile for Unified Transaction Validator Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json -I../lib/nlohmann_json/single_include
+LIBS = -lpthread
+
+# Source files
+VALIDATOR_SOURCES = ../src/core/unified_transaction_validator.cpp \
+                   ../src/core/consensus_harmony.cpp \
+                   ../src/core/consensus_harmony_manager.cpp \
+                   ../src/core/consensus_router.cpp \
+                   ../src/core/consensus_balancer.cpp \
+                   ../src/core/consensus_monitor.cpp \
+                   ../src/core/pos_consensus_engine.cpp \
+                   ../src/core/logger.cpp \
+                   ../src/core/utils.cpp
+
+TEST_SOURCES = unified_transaction_validator_test.cpp
+
+# Object files
+VALIDATOR_OBJECTS = $(VALIDATOR_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_unified_transaction_validator
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(VALIDATOR_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --verbose
+
+# Clean build artifacts
+clean:
+	rm -f $(VALIDATOR_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+
+# Clean all including dependencies
+clean-all: clean
+	find .. -name "*.o" -delete
+
+# Install dependencies (if needed)
+install-deps:
+	@echo "Installing dependencies..."
+	@echo "Make sure nlohmann/json is available in ../lib/nlohmann_json/"
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG -O3
+release: $(TARGET)
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
+
+# Static analysis with cppcheck
+static-analysis:
+	cppcheck --enable=all --std=c++17 $(VALIDATOR_SOURCES) $(TEST_SOURCES)
+
+# Format code
+format:
+	clang-format -i $(VALIDATOR_SOURCES) $(TEST_SOURCES)
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all          - Build the test executable (default)"
+	@echo "  test         - Build and run tests"
+	@echo "  test-verbose - Build and run tests with verbose output"
+	@echo "  clean        - Clean build artifacts"
+	@echo "  clean-all    - Clean all build artifacts including dependencies"
+	@echo "  debug        - Build with debug flags"
+	@echo "  release      - Build with release optimization"
+	@echo "  memcheck     - Run tests with valgrind memory checking"
+	@echo "  static-analysis - Run static analysis with cppcheck"
+	@echo "  format       - Format source code with clang-format"
+	@echo "  help         - Show this help message"
+
+.PHONY: all test test-verbose clean clean-all install-deps debug release memcheck static-analysis format help

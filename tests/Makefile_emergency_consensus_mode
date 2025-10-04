@@ -1,0 +1,83 @@
+# Makefile for Emergency Consensus Mode Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -pthread
+
+# Source files
+EMERGENCY_MODE_SOURCES = ../src/core/emergency_consensus_mode.cpp \
+                        ../src/core/consensus_harmony.cpp \
+                        ../src/core/consensus_harmony_manager.cpp \
+                        ../src/core/consensus_router.cpp \
+                        ../src/core/consensus_balancer.cpp \
+                        ../src/core/consensus_monitor.cpp \
+                        ../src/core/logger.cpp
+
+# Test files
+TEST_SIMPLE = test_emergency_consensus_mode_simple
+TEST_COMPREHENSIVE = emergency_consensus_mode_test
+
+# Object files
+EMERGENCY_MODE_OBJECTS = $(EMERGENCY_MODE_SOURCES:.cpp=.o)
+
+# Default target
+all: $(TEST_SIMPLE)
+
+# Simple test (no external dependencies)
+$(TEST_SIMPLE): tests/test_emergency_consensus_mode_simple.cpp $(EMERGENCY_MODE_OBJECTS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+# Comprehensive test (requires Google Test)
+$(TEST_COMPREHENSIVE): tests/emergency_consensus_mode_test.cpp $(EMERGENCY_MODE_OBJECTS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) -lgtest -lgtest_main
+
+# Object file compilation
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run simple test
+run-simple: $(TEST_SIMPLE)
+	./$(TEST_SIMPLE)
+
+# Run comprehensive test
+run-comprehensive: $(TEST_COMPREHENSIVE)
+	./$(TEST_COMPREHENSIVE)
+
+# Run all tests
+test: run-simple
+
+# Clean build artifacts
+clean:
+	rm -f $(TEST_SIMPLE) $(TEST_COMPREHENSIVE) $(EMERGENCY_MODE_OBJECTS)
+	rm -f tests/test_emergency_consensus_mode_simple.o tests/emergency_consensus_mode_test.o
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y build-essential libgtest-dev cmake
+	cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp *.a /usr/lib
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TEST_SIMPLE)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG -O3
+release: $(TEST_SIMPLE)
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build simple test (default)"
+	@echo "  $(TEST_SIMPLE)   - Build simple test"
+	@echo "  $(TEST_COMPREHENSIVE) - Build comprehensive test (requires Google Test)"
+	@echo "  run-simple       - Run simple test"
+	@echo "  run-comprehensive - Run comprehensive test"
+	@echo "  test             - Run all available tests"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  install-deps     - Install dependencies"
+	@echo "  debug            - Build with debug flags"
+	@echo "  release          - Build with release flags"
+	@echo "  help             - Show this help"
+
+.PHONY: all run-simple run-comprehensive test clean install-deps debug release help

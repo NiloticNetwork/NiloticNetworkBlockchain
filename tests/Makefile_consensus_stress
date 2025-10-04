@@ -1,0 +1,69 @@
+# Makefile for Consensus Stress Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g -pthread
+
+# Include directories
+INCLUDES = -Iinclude \
+           -Ilib/nlohmann_json/single_include \
+           -Ilib/SQLiteCpp/include \
+           -Ilib/sqlite
+
+# Source files
+SOURCES = src/core/blockchain.cpp \
+          src/core/block.cpp \
+          src/core/transaction.cpp \
+          src/core/utils.cpp \
+          src/core/logger.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/consensus_harmony_manager.cpp \
+          src/core/consensus_router.cpp \
+          src/core/consensus_balancer.cpp \
+          src/core/consensus_monitor.cpp \
+          src/core/emergency_consensus_mode.cpp \
+          src/core/consensus_config_manager.cpp \
+          src/core/parameter_adjuster.cpp \
+          src/core/pos_consensus_engine.cpp \
+          src/core/proof_of_resource_contribution.cpp \
+          src/core/smart_contract_consensus_engine.cpp \
+          src/core/voting_consensus_engine.cpp \
+          src/core/unified_transaction_validator.cpp \
+          src/core/consensus_conflict_resolver.cpp \
+          lib/sqlite/sqlite3.c
+
+# Test file
+TEST_FILE = tests/consensus_stress_test.cpp
+
+# Output executable
+TARGET = test_consensus_stress
+
+# Libraries
+LIBS = -lpthread -lssl -lcrypto -ldl
+
+# Default target
+all: $(TARGET)
+
+$(TARGET): $(TEST_FILE) $(SOURCES)
+	@echo "Building Consensus Stress Test..."
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(TARGET) $(TEST_FILE) $(SOURCES) $(LIBS)
+	@echo "Build complete: $(TARGET)"
+
+test: $(TARGET)
+	@echo "Running Consensus Stress tests..."
+	@echo "WARNING: This test will stress the system with high load"
+	@echo "Expected duration: 2-5 minutes"
+	./$(TARGET)
+
+clean:
+	@echo "Cleaning up..."
+	rm -f $(TARGET)
+	@echo "Clean complete"
+
+.PHONY: all test clean help
+
+help:
+	@echo "Available targets:"
+	@echo "  all     - Build the stress test executable"
+	@echo "  test    - Run the consensus stress tests (WARNING: High system load)"
+	@echo "  clean   - Remove built files"
+	@echo "  help    - Show this help message"

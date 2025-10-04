@@ -1,0 +1,85 @@
+# Makefile for Consensus Security Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -lpthread -lcrypto -lssl
+
+# Source directories
+SRC_DIR = ../src/core
+TEST_DIR = .
+
+# Object files needed for security tests
+SECURITY_OBJS = \
+	$(SRC_DIR)/consensus_security_validator.o \
+	$(SRC_DIR)/consensus_security_auditor.o \
+	$(SRC_DIR)/consensus_harmony_manager.o \
+	$(SRC_DIR)/consensus_harmony.o \
+	$(SRC_DIR)/consensus_router.o \
+	$(SRC_DIR)/consensus_balancer.o \
+	$(SRC_DIR)/consensus_monitor.o \
+	$(SRC_DIR)/emergency_consensus_mode.o \
+	$(SRC_DIR)/block.o \
+	$(SRC_DIR)/transaction.o \
+	$(SRC_DIR)/utils.o \
+	$(SRC_DIR)/logger.o
+
+# Test executables
+SECURITY_TEST = consensus_security_test
+PENETRATION_TEST = consensus_penetration_test
+
+.PHONY: all clean security penetration run-security run-penetration run-all
+
+all: $(SECURITY_TEST) $(PENETRATION_TEST)
+
+# Build security test
+$(SECURITY_TEST): $(TEST_DIR)/consensus_security_test.cpp $(SECURITY_OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+# Build penetration test
+$(PENETRATION_TEST): $(TEST_DIR)/consensus_penetration_test.cpp $(SECURITY_OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+# Build individual object files
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run security tests
+run-security: $(SECURITY_TEST)
+	@echo "Running Consensus Security Tests..."
+	@echo "=================================="
+	./$(SECURITY_TEST)
+
+# Run penetration tests
+run-penetration: $(PENETRATION_TEST)
+	@echo "Running Consensus Penetration Tests..."
+	@echo "====================================="
+	./$(PENETRATION_TEST)
+
+# Run all security tests
+run-all: run-security run-penetration
+	@echo ""
+	@echo "All security tests completed!"
+
+# Security test targets
+security: $(SECURITY_TEST)
+
+penetration: $(PENETRATION_TEST)
+
+# Clean build artifacts
+clean:
+	rm -f $(SECURITY_TEST) $(PENETRATION_TEST)
+	rm -f $(SECURITY_OBJS)
+	rm -f *.log
+	rm -f core.*
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build all security tests"
+	@echo "  security      - Build security test only"
+	@echo "  penetration   - Build penetration test only"
+	@echo "  run-security  - Run security tests"
+	@echo "  run-penetration - Run penetration tests"
+	@echo "  run-all       - Run all security tests"
+	@echo "  clean         - Clean build artifacts"
+	@echo "  help          - Show this help message"

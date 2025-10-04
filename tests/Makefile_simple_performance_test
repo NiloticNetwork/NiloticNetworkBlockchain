@@ -1,0 +1,54 @@
+# Simple Makefile for Performance Optimizer Tests (without blockchain dependencies)
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -lpthread
+
+# Source files (minimal dependencies)
+OPTIMIZER_SOURCES = ../src/core/consensus_performance_optimizer.cpp \
+                   ../src/core/logger.cpp \
+                   ../src/core/consensus_harmony.cpp
+
+TEST_SOURCES = simple_performance_optimizer_test.cpp
+
+# Object files
+OPTIMIZER_OBJECTS = $(OPTIMIZER_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = simple_performance_optimizer_test
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OPTIMIZER_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(OPTIMIZER_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Show help
+help:
+	@echo "Available targets:"
+	@echo "  all    - Build the test executable (default)"
+	@echo "  test   - Build and run tests"
+	@echo "  clean  - Remove build artifacts"
+	@echo "  debug  - Build with debug flags"
+	@echo "  help   - Show this help message"
+
+.PHONY: all test clean debug help

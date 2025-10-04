@@ -1,0 +1,40 @@
+# Simple Makefile for PoS Integration Tests (without Google Test)
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -Ilib/nlohmann_json/single_include -I/opt/homebrew/include
+LDFLAGS = -pthread -L/opt/homebrew/lib -lssl -lcrypto
+
+# Source files
+SOURCES = tests/test_pos_integration_simple.cpp \
+          src/core/pos_consensus_engine.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/block.cpp \
+          src/core/transaction.cpp \
+          src/core/logger.cpp \
+          src/core/utils.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_pos_integration_simple
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build files
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+.PHONY: all test clean

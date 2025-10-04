@@ -1,0 +1,108 @@
+# Makefile for Smart Contract Consensus Engine Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include -I../lib/SQLiteCpp/include -I../lib/asio
+LIBS = -lgtest -lgtest_main -lgmock -lgmock_main -pthread -lssl -lcrypto
+
+# Source files
+SOURCES = smart_contract_consensus_engine_test.cpp \
+          ../src/core/smart_contract_consensus_engine.cpp \
+          ../src/core/smart_contract_vm.cpp \
+          ../src/core/voting_consensus_engine.cpp \
+          ../src/core/blockchain.cpp \
+          ../src/core/block.cpp \
+          ../src/core/transaction.cpp \
+          ../src/core/logger.cpp \
+          ../src/core/utils.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_smart_contract_consensus
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --gtest_verbose
+
+# Run specific test
+test-filter: $(TARGET)
+	./$(TARGET) --gtest_filter=$(FILTER)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y libgtest-dev libgmock-dev cmake build-essential libssl-dev
+
+# Build Google Test from source if not available
+build-gtest:
+	cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp lib/*.a /usr/lib/
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -DNDEBUG
+release: $(TARGET)
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+# Coverage analysis
+coverage: CXXFLAGS += --coverage
+coverage: LIBS += --coverage
+coverage: $(TARGET)
+	./$(TARGET)
+	gcov $(SOURCES)
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_html
+
+# Static analysis with cppcheck
+static-analysis:
+	cppcheck --enable=all --std=c++17 $(INCLUDES) $(SOURCES)
+
+# Format code
+format:
+	clang-format -i $(SOURCES) ../include/core/smart_contract_consensus_engine.h
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build the test executable"
+	@echo "  test             - Run all tests"
+	@echo "  test-verbose     - Run tests with verbose output"
+	@echo "  test-filter      - Run specific test (use FILTER=TestName)"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  install-deps     - Install required dependencies"
+	@echo "  build-gtest      - Build Google Test from source"
+	@echo "  debug            - Build with debug symbols"
+	@echo "  release          - Build optimized release version"
+	@echo "  memcheck         - Run tests with memory leak detection"
+	@echo "  coverage         - Generate code coverage report"
+	@echo "  static-analysis  - Run static code analysis"
+	@echo "  format           - Format source code"
+	@echo "  help             - Show this help message"
+
+.PHONY: all test test-verbose test-filter clean install-deps build-gtest debug release memcheck coverage static-analysis format help

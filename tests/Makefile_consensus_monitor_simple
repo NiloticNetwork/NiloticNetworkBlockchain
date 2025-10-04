@@ -1,0 +1,37 @@
+# Simple Makefile for Consensus Monitor Test
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include
+
+# Source files
+SOURCES = tests/test_consensus_monitor_simple.cpp \
+          src/core/consensus_monitor.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/logger.cpp \
+          src/core/utils.cpp
+
+# Target executable
+TARGET = test_consensus_monitor_simple
+
+.PHONY: all clean test run
+
+all: $(TARGET)
+
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -pthread -o $@ $^
+
+test: $(TARGET)
+	./$(TARGET)
+
+run: test
+
+clean:
+	rm -f $(TARGET)
+
+help:
+	@echo "Available targets:"
+	@echo "  all   - Build the test executable"
+	@echo "  test  - Build and run the test"
+	@echo "  run   - Alias for test"
+	@echo "  clean - Remove built files"
+	@echo "  help  - Show this help message"

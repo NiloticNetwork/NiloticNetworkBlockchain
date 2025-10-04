@@ -1,0 +1,153 @@
+# Makefile for Enhanced Blockchain Integration Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json -I../lib/nlohmann_json/single_include
+LIBS = -lpthread
+
+# Source files
+BLOCKCHAIN_SOURCES = ../src/core/enhanced_blockchain.cpp \
+                    ../src/core/unified_transaction_validator.cpp \
+                    ../src/core/consensus_harmony.cpp \
+                    ../src/core/consensus_harmony_manager.cpp \
+                    ../src/core/consensus_router.cpp \
+                    ../src/core/consensus_balancer.cpp \
+                    ../src/core/consensus_monitor.cpp \
+                    ../src/core/pos_consensus_engine.cpp \
+                    ../src/core/logger.cpp \
+                    ../src/core/utils.cpp
+
+TEST_SOURCES = enhanced_blockchain_integration_test.cpp
+
+# Object files
+BLOCKCHAIN_OBJECTS = $(BLOCKCHAIN_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_enhanced_blockchain_integration
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(BLOCKCHAIN_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --verbose
+
+# Run specific test categories
+test-validation: $(TARGET)
+	./$(TARGET) --category=validation
+
+test-mining: $(TARGET)
+	./$(TARGET) --category=mining
+
+test-consensus: $(TARGET)
+	./$(TARGET) --category=consensus
+
+# Clean build artifacts
+clean:
+	rm -f $(BLOCKCHAIN_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+
+# Clean all including dependencies
+clean-all: clean
+	find .. -name "*.o" -delete
+
+# Install dependencies
+install-deps:
+	@echo "Installing dependencies..."
+	@echo "Make sure nlohmann/json is available in ../lib/nlohmann_json/"
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3 -fsanitize=address
+debug: LIBS += -fsanitize=address
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG -O3 -march=native
+release: $(TARGET)
+
+# Profile build
+profile: CXXFLAGS += -pg -O2
+profile: LIBS += -pg
+profile: $(TARGET)
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+# Thread check with valgrind
+threadcheck: $(TARGET)
+	valgrind --tool=helgrind ./$(TARGET)
+
+# Static analysis with cppcheck
+static-analysis:
+	cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem $(BLOCKCHAIN_SOURCES) $(TEST_SOURCES)
+
+# Format code
+format:
+	clang-format -i $(BLOCKCHAIN_SOURCES) $(TEST_SOURCES)
+
+# Generate coverage report
+coverage: CXXFLAGS += --coverage
+coverage: LIBS += --coverage
+coverage: $(TARGET)
+	./$(TARGET)
+	gcov $(BLOCKCHAIN_SOURCES)
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_report
+
+# Benchmark tests
+benchmark: release
+	time ./$(TARGET)
+
+# Stress test with multiple runs
+stress-test: $(TARGET)
+	@echo "Running stress test (10 iterations)..."
+	@for i in {1..10}; do \
+		echo "Iteration $$i"; \
+		./$(TARGET) || exit 1; \
+	done
+	@echo "Stress test completed successfully!"
+
+# Performance profiling
+perf-profile: profile
+	./$(TARGET)
+	gprof $(TARGET) gmon.out > performance_profile.txt
+	@echo "Performance profile saved to performance_profile.txt"
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build the test executable (default)"
+	@echo "  test             - Build and run tests"
+	@echo "  test-verbose     - Build and run tests with verbose output"
+	@echo "  test-validation  - Run validation-specific tests"
+	@echo "  test-mining      - Run mining-specific tests"
+	@echo "  test-consensus   - Run consensus-specific tests"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  clean-all        - Clean all build artifacts including dependencies"
+	@echo "  debug            - Build with debug flags and AddressSanitizer"
+	@echo "  release          - Build with release optimization"
+	@echo "  profile          - Build with profiling support"
+	@echo "  memcheck         - Run tests with valgrind memory checking"
+	@echo "  threadcheck      - Run tests with valgrind thread checking"
+	@echo "  static-analysis  - Run static analysis with cppcheck"
+	@echo "  format           - Format source code with clang-format"
+	@echo "  coverage         - Generate code coverage report"
+	@echo "  benchmark        - Run performance benchmark"
+	@echo "  stress-test      - Run stress test with multiple iterations"
+	@echo "  perf-profile     - Generate performance profile"
+	@echo "  help             - Show this help message"
+
+.PHONY: all test test-verbose test-validation test-mining test-consensus clean clean-all install-deps debug release profile memcheck threadcheck static-analysis format coverage benchmark stress-test perf-profile help

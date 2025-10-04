@@ -1,0 +1,130 @@
+# Makefile for Consensus Performance Benchmark
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -lpthread
+
+# Source files
+OPTIMIZER_SOURCES = ../src/core/consensus_performance_optimizer.cpp \
+                   ../src/core/logger.cpp \
+                   ../src/core/consensus_harmony.cpp
+
+BENCHMARK_SOURCES = consensus_performance_benchmark.cpp
+
+# Object files
+OPTIMIZER_OBJECTS = $(OPTIMIZER_SOURCES:.cpp=.o)
+BENCHMARK_OBJECTS = $(BENCHMARK_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = consensus_performance_benchmark
+
+# Default target
+all: $(TARGET)
+
+# Build the benchmark executable
+$(TARGET): $(OPTIMIZER_OBJECTS) $(BENCHMARK_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run benchmark with default settings
+benchmark: $(TARGET)
+	./$(TARGET)
+
+# Run quick benchmark (fewer requests)
+benchmark-quick: $(TARGET)
+	./$(TARGET) --requests 50 --engines 2
+
+# Run intensive benchmark (more requests)
+benchmark-intensive: $(TARGET)
+	./$(TARGET) --requests 500 --engines 4 --threads 8
+
+# Run benchmark with custom settings
+benchmark-custom: $(TARGET)
+	./$(TARGET) --requests 200 --engines 3 --threads 6 --processing-time 500 --cache-size 2000
+
+# Run benchmark with different cache sizes
+benchmark-cache-comparison: $(TARGET)
+	@echo "Running cache size comparison..."
+	./$(TARGET) --requests 100 --cache-size 100
+	./$(TARGET) --requests 100 --cache-size 500
+	./$(TARGET) --requests 100 --cache-size 1000
+	./$(TARGET) --requests 100 --cache-size 5000
+
+# Run benchmark with different thread counts
+benchmark-thread-comparison: $(TARGET)
+	@echo "Running thread count comparison..."
+	./$(TARGET) --requests 100 --threads 1
+	./$(TARGET) --requests 100 --threads 2
+	./$(TARGET) --requests 100 --threads 4
+	./$(TARGET) --requests 100 --threads 8
+
+# Run benchmark with different processing times
+benchmark-processing-comparison: $(TARGET)
+	@echo "Running processing time comparison..."
+	./$(TARGET) --requests 100 --processing-time 100
+	./$(TARGET) --requests 100 --processing-time 500
+	./$(TARGET) --requests 100 --processing-time 1000
+	./$(TARGET) --requests 100 --processing-time 2000
+
+# Profile with perf (Linux only)
+profile: $(TARGET)
+	perf record -g ./$(TARGET) --requests 200
+	perf report
+
+# Memory profiling with valgrind
+memprofile: $(TARGET)
+	valgrind --tool=massif --massif-out-file=massif.out ./$(TARGET) --requests 50
+	ms_print massif.out
+
+# Clean build artifacts
+clean:
+	rm -f $(OPTIMIZER_OBJECTS) $(BENCHMARK_OBJECTS) $(TARGET)
+	rm -f *.json perf.data* massif.out*
+
+# Clean all including backup files
+clean-all: clean
+	rm -f *~ ../*~ ../src/core/*~ ../include/core/*~
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3 -O0
+debug: clean $(TARGET)
+
+# Release build (already optimized by default)
+release: $(TARGET)
+
+# Static analysis
+static-analysis:
+	cppcheck --enable=all --std=c++17 $(OPTIMIZER_SOURCES) $(BENCHMARK_SOURCES)
+
+# Format code
+format:
+	clang-format -i $(OPTIMIZER_SOURCES) $(BENCHMARK_SOURCES)
+
+# Show help
+help:
+	@echo "Available targets:"
+	@echo "  all                        - Build the benchmark executable (default)"
+	@echo "  benchmark                  - Run benchmark with default settings"
+	@echo "  benchmark-quick            - Run quick benchmark (fewer requests)"
+	@echo "  benchmark-intensive        - Run intensive benchmark (more requests)"
+	@echo "  benchmark-custom           - Run benchmark with custom settings"
+	@echo "  benchmark-cache-comparison - Compare different cache sizes"
+	@echo "  benchmark-thread-comparison- Compare different thread counts"
+	@echo "  benchmark-processing-comparison - Compare different processing times"
+	@echo "  profile                    - Profile with perf (Linux only)"
+	@echo "  memprofile                 - Memory profiling with valgrind"
+	@echo "  clean                      - Remove build artifacts"
+	@echo "  clean-all                  - Remove all generated files"
+	@echo "  debug                      - Build with debug flags"
+	@echo "  release                    - Build optimized release version"
+	@echo "  static-analysis            - Run static code analysis"
+	@echo "  format                     - Format source code"
+	@echo "  help                       - Show this help message"
+
+.PHONY: all benchmark benchmark-quick benchmark-intensive benchmark-custom \
+        benchmark-cache-comparison benchmark-thread-comparison benchmark-processing-comparison \
+        profile memprofile clean clean-all debug release static-analysis format help

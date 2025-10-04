@@ -1,0 +1,72 @@
+# Makefile for Consensus Monitor Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include -I/usr/local/include
+LIBS = -lgtest -lgtest_main -lgmock -lgmock_main -pthread
+
+# Source files
+MONITOR_SOURCES = ../src/core/consensus_monitor.cpp \
+                  ../src/core/consensus_harmony.cpp \
+                  ../src/core/logger.cpp \
+                  ../src/core/utils.cpp
+
+TEST_SOURCES = consensus_monitor_test.cpp
+
+# Object files (build in tests directory to avoid conflicts)
+MONITOR_OBJECTS = $(notdir $(MONITOR_SOURCES:.cpp=.o))
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_monitor
+
+.PHONY: all clean test run
+
+all: $(TARGET)
+
+$(TARGET): $(MONITOR_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files from different directories
+consensus_monitor.o: ../src/core/consensus_monitor.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+consensus_harmony.o: ../src/core/consensus_harmony.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+logger.o: ../src/core/logger.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+utils.o: ../src/core/utils.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+test: $(TARGET)
+	./$(TARGET)
+
+run: test
+
+clean:
+	rm -f $(TARGET) $(MONITOR_OBJECTS) $(TEST_OBJECTS)
+
+# Install Google Test if not available
+install-gtest:
+	@echo "Installing Google Test..."
+	@if ! pkg-config --exists gtest; then \
+		echo "Google Test not found. Please install it:"; \
+		echo "  Ubuntu/Debian: sudo apt-get install libgtest-dev libgmock-dev"; \
+		echo "  macOS: brew install googletest"; \
+		echo "  Or build from source: https://github.com/google/googletest"; \
+		exit 1; \
+	fi
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all          - Build the test executable"
+	@echo "  test         - Build and run tests"
+	@echo "  run          - Alias for test"
+	@echo "  clean        - Remove built files"
+	@echo "  install-gtest - Check/install Google Test"
+	@echo "  help         - Show this help message"

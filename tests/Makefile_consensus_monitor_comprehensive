@@ -1,0 +1,108 @@
+# Makefile for Consensus Monitor Comprehensive Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include -I/usr/local/include
+LIBS = -lgtest -lgtest_main -pthread
+
+# Source files
+MONITOR_SOURCES = src/core/consensus_monitor.cpp \
+                 src/core/consensus_harmony.cpp \
+                 src/core/logger.cpp \
+                 src/core/utils.cpp
+
+TEST_SOURCES = tests/consensus_monitor_comprehensive_test.cpp
+
+# Object files
+MONITOR_OBJECTS = $(MONITOR_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_monitor_comprehensive
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(MONITOR_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --gtest_verbose
+
+# Run specific test
+test-filter: $(TARGET)
+	./$(TARGET) --gtest_filter=$(FILTER)
+
+# Clean build artifacts
+clean:
+	rm -f $(MONITOR_OBJECTS) $(TEST_OBJECTS) $(TARGET)
+	rm -f test_export.json
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y libgtest-dev cmake
+	cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp *.a /usr/lib
+
+# Install dependencies (macOS)
+install-deps-mac:
+	brew install googletest
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG -O3
+release: $(TARGET)
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
+
+# Code coverage
+coverage: CXXFLAGS += --coverage
+coverage: LIBS += --coverage
+coverage: $(TARGET)
+	./$(TARGET)
+	gcov $(MONITOR_SOURCES) $(TEST_SOURCES)
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_report
+
+# Static analysis
+analyze:
+	cppcheck --enable=all --std=c++17 $(MONITOR_SOURCES) $(TEST_SOURCES)
+
+# Format code
+format:
+	clang-format -i $(MONITOR_SOURCES) $(TEST_SOURCES)
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all              - Build the test executable"
+	@echo "  test             - Run all tests"
+	@echo "  test-verbose     - Run tests with verbose output"
+	@echo "  test-filter      - Run specific test (use FILTER=TestName)"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  install-deps     - Install dependencies (Ubuntu/Debian)"
+	@echo "  install-deps-mac - Install dependencies (macOS)"
+	@echo "  debug            - Build with debug symbols"
+	@echo "  release          - Build optimized release version"
+	@echo "  memcheck         - Run with valgrind memory checking"
+	@echo "  coverage         - Generate code coverage report"
+	@echo "  analyze          - Run static code analysis"
+	@echo "  format           - Format code with clang-format"
+	@echo "  help             - Show this help message"
+
+.PHONY: all test test-verbose test-filter clean install-deps install-deps-mac debug release memcheck coverage analyze format help

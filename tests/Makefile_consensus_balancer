@@ -1,0 +1,79 @@
+# Makefile for Consensus Balancer Tests
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage
+INCLUDES = -I../include/core -I../lib/nlohmann_json/single_include -I/usr/local/include
+LDFLAGS = -lgtest -lgtest_main -lgmock -lgmock_main -pthread -lgcov --coverage
+
+# Source files
+CORE_SOURCES = ../src/core/consensus_balancer.cpp \
+               ../src/core/consensus_harmony.cpp \
+               ../src/core/consensus_router.cpp \
+               ../src/core/logger.cpp \
+               ../src/core/utils.cpp
+
+TEST_SOURCES = consensus_balancer_test.cpp
+
+# Object files
+CORE_OBJECTS = $(CORE_SOURCES:.cpp=.o)
+TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_consensus_balancer
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(CORE_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CORE_OBJECTS) $(TEST_OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+# Compile core source files
+../src/core/%.o: ../src/core/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile test source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET) --gtest_output=xml:consensus_balancer_test_results.xml
+
+# Run tests with verbose output
+test-verbose: $(TARGET)
+	./$(TARGET) --gtest_output=xml:consensus_balancer_test_results.xml --gtest_print_time=1
+
+# Generate coverage report
+coverage: test
+	gcov $(CORE_SOURCES) $(TEST_SOURCES)
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_html
+
+# Clean build artifacts
+clean:
+	rm -f $(TARGET) $(CORE_OBJECTS) $(TEST_OBJECTS) *.gcno *.gcda *.gcov coverage.info
+	rm -rf coverage_html
+	rm -f consensus_balancer_test_results.xml
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	sudo apt-get update
+	sudo apt-get install -y libgtest-dev libgmock-dev lcov
+
+# Install dependencies (macOS)
+install-deps-mac:
+	brew install googletest lcov
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build the test executable"
+	@echo "  test          - Run tests"
+	@echo "  test-verbose  - Run tests with verbose output"
+	@echo "  coverage      - Generate coverage report"
+	@echo "  clean         - Clean build artifacts"
+	@echo "  install-deps  - Install dependencies (Ubuntu/Debian)"
+	@echo "  install-deps-mac - Install dependencies (macOS)"
+	@echo "  help          - Show this help message"
+
+.PHONY: all test test-verbose coverage clean install-deps install-deps-mac help

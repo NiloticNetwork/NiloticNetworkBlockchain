@@ -1,0 +1,77 @@
+# Makefile for ParameterAdjuster test
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Ilib/nlohmann_json/single_include
+LIBS = -pthread
+
+# Source files
+SOURCES = tests/parameter_adjuster_test.cpp \
+          src/core/parameter_adjuster.cpp \
+          src/core/consensus_balancer.cpp \
+          src/core/logger.cpp
+
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Target executable
+TARGET = test_parameter_adjuster
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) $(LIBS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run the test
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Install dependencies (if needed)
+install-deps:
+	@echo "Installing dependencies..."
+	@echo "Make sure nlohmann/json is available in ../lib/nlohmann_json/"
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TARGET)
+
+# Release build
+release: CXXFLAGS += -DNDEBUG -O3
+release: $(TARGET)
+
+# Memory check with valgrind
+memcheck: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
+
+# Static analysis with cppcheck
+static-analysis:
+	cppcheck --enable=all --std=c++17 $(SOURCES)
+
+# Format code
+format:
+	clang-format -i $(SOURCES) ../include/core/parameter_adjuster.h
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all          - Build the test executable (default)"
+	@echo "  test         - Build and run the test"
+	@echo "  clean        - Remove build artifacts"
+	@echo "  debug        - Build with debug flags"
+	@echo "  release      - Build with release optimization"
+	@echo "  memcheck     - Run with valgrind memory checking"
+	@echo "  static-analysis - Run cppcheck static analysis"
+	@echo "  format       - Format code with clang-format"
+	@echo "  help         - Show this help message"
+
+.PHONY: all test clean install-deps debug release memcheck static-analysis format help

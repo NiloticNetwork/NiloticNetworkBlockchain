@@ -1,0 +1,84 @@
+# Makefile for Automated Consensus Test Suite
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g -pthread
+
+# Include directories
+INCLUDES = -Iinclude \
+           -Ilib/nlohmann_json/single_include \
+           -Ilib/SQLiteCpp/include \
+           -Ilib/sqlite
+
+# Source files
+SOURCES = src/core/blockchain.cpp \
+          src/core/block.cpp \
+          src/core/transaction.cpp \
+          src/core/utils.cpp \
+          src/core/logger.cpp \
+          src/core/consensus_harmony.cpp \
+          src/core/consensus_harmony_manager.cpp \
+          src/core/consensus_router.cpp \
+          src/core/consensus_balancer.cpp \
+          src/core/consensus_monitor.cpp \
+          src/core/emergency_consensus_mode.cpp \
+          src/core/consensus_config_manager.cpp \
+          src/core/parameter_adjuster.cpp \
+          src/core/pos_consensus_engine.cpp \
+          src/core/proof_of_resource_contribution.cpp \
+          src/core/smart_contract_consensus_engine.cpp \
+          src/core/voting_consensus_engine.cpp \
+          src/core/unified_transaction_validator.cpp \
+          src/core/consensus_conflict_resolver.cpp \
+          lib/sqlite/sqlite3.c
+
+# Test file
+TEST_FILE = tests/automated_consensus_test_suite.cpp
+
+# Output executable
+TARGET = test_automated_consensus_suite
+
+# Libraries
+LIBS = -lpthread -lssl -lcrypto -ldl
+
+# Create test reports directory
+REPORT_DIR = test_reports
+
+# Default target
+all: $(TARGET)
+
+$(TARGET): $(TEST_FILE) $(SOURCES) | $(REPORT_DIR)
+	@echo "Building Automated Consensus Test Suite..."
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(TARGET) $(TEST_FILE) $(SOURCES) $(LIBS)
+	@echo "Build complete: $(TARGET)"
+
+$(REPORT_DIR):
+	@mkdir -p $(REPORT_DIR)
+
+test: $(TARGET)
+	@echo "Running Automated Consensus Test Suite..."
+	@echo "This suite includes comprehensive testing for CI/CD"
+	@echo "Reports will be generated in $(REPORT_DIR)/"
+	./$(TARGET)
+
+clean:
+	@echo "Cleaning up..."
+	rm -f $(TARGET)
+	@echo "Clean complete"
+
+clean-reports:
+	@echo "Cleaning test reports..."
+	rm -rf $(REPORT_DIR)
+	@echo "Reports cleaned"
+
+clean-all: clean clean-reports
+
+.PHONY: all test clean clean-reports clean-all help
+
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build the automated test suite executable"
+	@echo "  test          - Run the automated consensus test suite"
+	@echo "  clean         - Remove built files"
+	@echo "  clean-reports - Remove test report files"
+	@echo "  clean-all     - Remove all built and report files"
+	@echo "  help          - Show this help message"

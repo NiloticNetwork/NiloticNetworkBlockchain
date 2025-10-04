@@ -1,0 +1,46 @@
+# Simple Makefile for Mining Harmony Integration Tests
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0 -DTEST_BUILD
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include -I../lib/SQLiteCpp/include -I../lib/sqlite
+LIBS = -pthread -lssl -lcrypto -lsqlite3
+
+# Source files needed for mining harmony tests
+SOURCES = ../src/core/mining.cpp \
+          ../src/core/block.cpp \
+          ../src/core/transaction.cpp \
+          ../src/core/blockchain.cpp \
+          ../src/core/utils.cpp \
+          ../src/core/logger.cpp \
+          ../src/core/consensus_harmony.cpp
+
+# Test file
+TEST_SOURCE = tests/test_mining_harmony_simple.cpp
+
+# Target executable
+TARGET = test_mining_harmony_simple
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(TEST_SOURCE) $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
+
+# Run tests
+test: $(TARGET)
+	./$(TARGET)
+
+# Clean build artifacts
+clean:
+	rm -f $(TARGET)
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all   - Build the test executable"
+	@echo "  test  - Build and run tests"
+	@echo "  clean - Remove build artifacts"
+	@echo "  help  - Show this help message"
+
+.PHONY: all test clean help

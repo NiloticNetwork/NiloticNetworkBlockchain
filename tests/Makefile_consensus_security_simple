@@ -1,0 +1,63 @@
+# Simple Makefile for Consensus Security Tests (without external dependencies)
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -I../include -I../lib/nlohmann_json/single_include
+LIBS = -lssl -lcrypto -lpthread
+
+# Source directories
+SRC_DIR = ../src/core
+INCLUDE_DIR = ../include/core
+TEST_DIR = .
+
+# Object files needed for the test
+OBJS = \
+	$(SRC_DIR)/utils.o \
+	$(SRC_DIR)/consensus_harmony.o \
+	$(SRC_DIR)/consensus_security_validator.o \
+	$(SRC_DIR)/consensus_security_auditor.o
+
+# Test executable
+TARGET = test_consensus_security_simple
+
+# Default target
+all: $(TARGET)
+
+# Build the test executable
+$(TARGET): $(OBJS) test_consensus_security_simple.o
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+# Compile test file
+test_consensus_security_simple.o: test_consensus_security_simple.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile source files
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run the test
+test: $(TARGET)
+	@echo "Running simple consensus security tests..."
+	./$(TARGET)
+
+# Run with verbose output
+test-verbose: $(TARGET)
+	@echo "Running simple consensus security tests with verbose output..."
+	./$(TARGET) --verbose
+
+# Clean up
+clean:
+	rm -f $(TARGET) *.o $(SRC_DIR)/*.o
+
+# Clean and rebuild
+rebuild: clean all
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all      - Build the test executable"
+	@echo "  test     - Run the security tests"
+	@echo "  clean    - Clean build files"
+	@echo "  rebuild  - Clean and rebuild"
+	@echo "  help     - Show this help"
+
+.PHONY: all test test-verbose clean rebuild help
