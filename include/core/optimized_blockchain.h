@@ -23,6 +23,31 @@ struct PerformanceMetrics {
     std::atomic<uint64_t> memoryUsage{0};
     std::atomic<uint64_t> cpuUsage{0};
     std::chrono::steady_clock::time_point lastUpdate;
+    
+    // Custom copy constructor to handle atomic members
+    PerformanceMetrics(const PerformanceMetrics& other) 
+        : transactionsProcessed(other.transactionsProcessed.load()),
+          blocksMined(other.blocksMined.load()),
+          averageResponseTime(other.averageResponseTime.load()),
+          memoryUsage(other.memoryUsage.load()),
+          cpuUsage(other.cpuUsage.load()),
+          lastUpdate(other.lastUpdate) {}
+    
+    // Default constructor
+    PerformanceMetrics() = default;
+    
+    // Assignment operator to handle atomic members
+    PerformanceMetrics& operator=(const PerformanceMetrics& other) {
+        if (this != &other) {
+            transactionsProcessed.store(other.transactionsProcessed.load());
+            blocksMined.store(other.blocksMined.load());
+            averageResponseTime.store(other.averageResponseTime.load());
+            memoryUsage.store(other.memoryUsage.load());
+            cpuUsage.store(other.cpuUsage.load());
+            lastUpdate = other.lastUpdate;
+        }
+        return *this;
+    }
 };
 
 // Optimized transaction pool
@@ -30,7 +55,7 @@ class TransactionPool {
 private:
     std::priority_queue<Transaction, std::vector<Transaction>, 
                        std::function<bool(const Transaction&, const Transaction&)>> pendingTransactions;
-    std::mutex poolMutex;
+    mutable std::mutex poolMutex;
     std::condition_variable poolCV;
     size_t maxPoolSize;
     std::atomic<bool> shutdown{false};
@@ -113,26 +138,27 @@ private:
     MemoryPool<Transaction> transactionPool2;
     
     // Caching
-    std::unordered_map<std::string, std::any> cache;
-    std::mutex cacheMutex;
-    std::chrono::steady_clock::time_point lastCacheCleanup;
+    mutable std::unordered_map<std::string, std::any> cache;
+    mutable std::mutex cacheMutex;
+    mutable std::chrono::steady_clock::time_point lastCacheCleanup;
     
     // Threading
     std::thread miningThread;
     std::thread validationThread;
     std::atomic<bool> shutdown{false};
-    std::mutex chainMutex;
+    mutable std::mutex chainMutex;
     
     // Performance monitoring
-    PerformanceMetrics metrics;
+    mutable PerformanceMetrics metrics;
+    mutable std::mutex metricsMutex;
     std::thread monitoringThread;
     
     // Smart contract VM
     std::unique_ptr<SmartContractVM> vm;
     
     // Rate limiting
-    std::unordered_map<std::string, std::chrono::steady_clock::time_point> rateLimitMap;
-    std::mutex rateLimitMutex;
+    mutable std::unordered_map<std::string, std::chrono::steady_clock::time_point> rateLimitMap;
+    mutable std::mutex rateLimitMutex;
     const size_t maxRequestsPerMinute = 100;
 
 public:
@@ -169,7 +195,10 @@ public:
         // Update metrics
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        metrics.averageResponseTime = (metrics.averageResponseTime + duration.count()) / 2;
+        {
+            std::lock_guard<std::mutex> lock(metricsMutex);
+            metrics.averageResponseTime.store((metrics.averageResponseTime.load() + duration.count()) / 2);
+        }
         
         return *newBlock;
     }
@@ -196,7 +225,10 @@ public:
         
         // Add to transaction pool
         transactionPool.addTransaction(transaction);
-        metrics.transactionsProcessed++;
+        {
+            std::lock_guard<std::mutex> lock(metricsMutex);
+            metrics.transactionsProcessed.fetch_add(1);
+        }
         
         return true;
     }
@@ -262,7 +294,10 @@ public:
             // Update metrics
             auto end = std::chrono::steady_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-            metrics.averageResponseTime = (metrics.averageResponseTime + duration.count()) / 2;
+            {
+                std::lock_guard<std::mutex> lock(metricsMutex);
+                metrics.averageResponseTime.store((metrics.averageResponseTime.load() + duration.count()) / 2);
+            }
             
             return context.stack.empty() ? std::any() : context.stack.back();
         } catch (const std::exception& e) {
@@ -272,11 +307,13 @@ public:
 
     // Performance monitoring
     PerformanceMetrics getMetrics() const {
+        std::lock_guard<std::mutex> lock(metricsMutex);
         return metrics;
     }
 
     // Health check
     bool isHealthy() const {
+        std::lock_guard<std::mutex> lock(metricsMutex);
         auto now = std::chrono::steady_clock::now();
         auto lastUpdate = metrics.lastUpdate;
         auto timeSinceUpdate = std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdate).count();
@@ -302,7 +339,10 @@ private:
                 if (transactionPool.size() > 0) {
                     auto block = createBlock("system_miner");
                     addBlock(block);
-                    metrics.blocksMined++;
+                    {
+                        std::lock_guard<std::mutex> lock(metricsMutex);
+                        metrics.blocksMined.fetch_add(1);
+                    }
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(10));
             }
@@ -382,7 +422,10 @@ private:
     }
 
     void updateMetrics() {
-        metrics.lastUpdate = std::chrono::steady_clock::now();
+        {
+            std::lock_guard<std::mutex> lock(metricsMutex);
+            metrics.lastUpdate = std::chrono::steady_clock::now();
+        }
         
         // Clean up old cache entries
         auto now = std::chrono::steady_clock::now();

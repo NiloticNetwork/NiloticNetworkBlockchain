@@ -13,6 +13,7 @@
 #include "transaction.h"
 #include "blockchain.h"
 #include "wallet.h"
+#include "consensus_harmony.h"
 #include "json.hpp"
 
 // Mining configuration
@@ -98,8 +99,8 @@ private:
     std::string calculateHash(uint64_t nonce);
 };
 
-// Main mining engine
-class MiningEngine {
+// Enhanced mining engine with consensus harmony integration
+class MiningEngine : public ConsensusEngine {
 private:
     Blockchain& blockchain;
     MiningConfig config;
@@ -131,6 +132,24 @@ private:
         bool active;
     };
     std::vector<MiningPool> miningPools;
+    
+    // Harmony integration state
+    std::atomic<bool> harmonyInitialized;
+    std::atomic<bool> harmonyHealthy;
+    
+    // Harmony metrics
+    struct HarmonyMetrics {
+        uint64_t totalHarmonyValidations = 0;
+        uint64_t successfulHarmonyValidations = 0;
+        uint64_t harmonyConflicts = 0;
+        double averageConfidence = 0.0;
+        std::chrono::steady_clock::time_point lastHarmonyUpdate;
+        std::map<std::string, double> parameterHistory;
+        
+        HarmonyMetrics() : lastHarmonyUpdate(std::chrono::steady_clock::now()) {}
+    };
+    HarmonyMetrics harmonyMetrics;
+    mutable std::mutex harmonyMutex;
     
 public:
     MiningEngine(Blockchain& blockchain, const MiningConfig& config = MiningConfig());
@@ -179,6 +198,35 @@ public:
     
     // Block reward calculation
     uint64_t calculateBlockReward(uint64_t blockHeight);
+    
+    // ConsensusEngine interface implementation
+    bool validateBlock(const Block& block) override;
+    bool validateTransaction(const Transaction& transaction) override;
+    ConsensusResult processRequest(const ConsensusRequest& request) override;
+    bool initialize() override;
+    void shutdown() override;
+    bool isHealthy() const override;
+    ConsensusType getType() const override { return ConsensusType::PROOF_OF_WORK; }
+    std::string getName() const override { return "ProofOfWorkEngine"; }
+    nlohmann::json getStatus() const override;
+    nlohmann::json getMetrics() const override;
+    bool adjustParameters(const std::map<std::string, double>& parameters) override;
+    std::map<std::string, double> getParameters() const override;
+    
+    // Harmony-specific validation methods
+    bool validateBlockHarmony(const Block& block, const ConsensusRequest& request);
+    bool validateTransactionHarmony(const Transaction& transaction, const ConsensusRequest& request);
+    double calculateValidationConfidence(const Block& block) const;
+    double calculateValidationConfidence(const Transaction& transaction) const;
+    
+    // Metrics collection for harmony integration
+    void collectHarmonyMetrics();
+    void updateHarmonyStats(const ConsensusResult& result);
+    nlohmann::json getHarmonyMetrics() const;
+    
+    // Coordination with other consensus mechanisms
+    bool coordinateWithRouter(const ConsensusRequest& request);
+    void notifyValidationResult(const ConsensusResult& result);
     
 private:
     void miningLoop(const std::string& minerAddress);
@@ -229,45 +277,6 @@ public:
     void setActive(bool status) { active = status; }
 };
 
-// Consensus mechanism
-class ConsensusEngine {
-private:
-    Blockchain& blockchain;
-    MiningEngine& miningEngine;
-    
-    // Consensus parameters
-    uint64_t requiredConfirmations = 6;
-    uint64_t maxBlockSize = 1024 * 1024;
-    uint64_t maxBlockTime = 600;
-    double minimumStake = 1000.0;
-    
-public:
-    ConsensusEngine(Blockchain& blockchain, MiningEngine& miningEngine);
-    
-    // Consensus validation
-    bool validateBlockConsensus(const Block& block) const;
-    bool validateTransactionConsensus(const Transaction& transaction) const;
-    bool isBlockFinalized(uint64_t blockHeight) const;
-    
-    // Fork resolution
-    std::vector<Block> resolveFork(const std::vector<Block>& blocks) const;
-    bool isLongestChain(const std::vector<Block>& chain) const;
-    
-    // Stake validation
-    bool validateStake(const std::string& address, double amount) const;
-    double getStakeWeight(const std::string& address) const;
-    
-    // Configuration
-    void setRequiredConfirmations(uint64_t confirmations) { requiredConfirmations = confirmations; }
-    void setMaxBlockSize(uint64_t size) { maxBlockSize = size; }
-    void setMaxBlockTime(uint64_t time) { maxBlockTime = time; }
-    void setMinimumStake(double stake) { minimumStake = stake; }
-    
-    // Getters
-    uint64_t getRequiredConfirmations() const { return requiredConfirmations; }
-    uint64_t getMaxBlockSize() const { return maxBlockSize; }
-    uint64_t getMaxBlockTime() const { return maxBlockTime; }
-    double getMinimumStake() const { return minimumStake; }
-};
+
 
 #endif // MINING_H 

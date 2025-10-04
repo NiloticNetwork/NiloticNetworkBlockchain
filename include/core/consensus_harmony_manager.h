@@ -5,6 +5,10 @@
 #include "consensus_router.h"
 #include "consensus_balancer.h"
 #include "consensus_monitor.h"
+#include "emergency_consensus_mode.h"
+#include "consensus_security_validator.h"
+#include "consensus_security_auditor.h"
+#include "consensus_performance_optimizer.h"
 #include <memory>
 #include <thread>
 #include <condition_variable>
@@ -22,6 +26,14 @@ private:
     std::unique_ptr<ConsensusRouter> router;
     std::unique_ptr<ConsensusBalancer> balancer;
     std::unique_ptr<ConsensusMonitor> monitor;
+    std::unique_ptr<EmergencyConsensusMode> emergencyMode;
+    
+    // Security components
+    std::unique_ptr<ConsensusSecurityValidator> securityValidator;
+    std::unique_ptr<ConsensusSecurityAuditor> securityAuditor;
+    
+    // Performance optimization
+    std::unique_ptr<ConsensusPerformanceOptimizer> performanceOptimizer;
     
     // Configuration and state
     ConsensusConfig config;
@@ -83,8 +95,35 @@ public:
     
     // Emergency operations
     bool enterEmergencyMode();
+    bool enterEmergencyMode(EmergencyType type, EmergencySeverity severity, 
+                           const std::string& description, const std::string& source = "");
     bool exitEmergencyMode();
     bool isInEmergencyMode() const;
+    EmergencyConsensusMode* getEmergencyMode() const { return emergencyMode.get(); }
+    
+    // Security operations
+    SecurityValidationResult validateSecurity(const ConsensusRequest& request);
+    SecurityValidationResult validateBlockSecurity(const Block& block);
+    SecurityValidationResult validateTransactionSecurity(const Transaction& transaction);
+    void logSecurityEvent(const std::string& event, const std::string& source, 
+                         const nlohmann::json& details = {});
+    nlohmann::json getSecurityMetrics() const;
+    nlohmann::json getSecurityReport() const;
+    bool enableSecurityFeature(const std::string& feature, bool enable);
+    
+    // Security component access
+    ConsensusSecurityValidator* getSecurityValidator() const { return securityValidator.get(); }
+    ConsensusSecurityAuditor* getSecurityAuditor() const { return securityAuditor.get(); }
+    
+    // Performance optimization access
+    ConsensusPerformanceOptimizer* getPerformanceOptimizer() const { return performanceOptimizer.get(); }
+    
+    // Performance optimization methods
+    bool enablePerformanceOptimization(bool enable);
+    bool updateOptimizationConfiguration(const OptimizationConfig& config);
+    OptimizationConfig getOptimizationConfiguration() const;
+    nlohmann::json getPerformanceReport() const;
+    nlohmann::json runPerformanceBenchmark(const std::vector<ConsensusRequest>& testRequests);
     
     // Blockchain integration
     void setBlockchain(Blockchain* bc) { blockchain = bc; }

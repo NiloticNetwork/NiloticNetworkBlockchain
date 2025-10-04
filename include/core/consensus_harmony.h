@@ -52,7 +52,9 @@ struct ConsensusRequest {
     }
     
 private:
-    std::string generateRequestId() const;
+    std::string generateRequestId() const {
+        return "REQ_" + std::to_string(timestamp) + "_" + std::to_string(rand());
+    }
 };
 
 // Consensus result structure

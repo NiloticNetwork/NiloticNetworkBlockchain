@@ -1,6 +1,7 @@
 #include "mining.h"
 #include "utils.h"
 #include "logger.h"
+#include "consensus_harmony.h"
 #include <algorithm>
 #include <numeric>
 #include <sstream>
@@ -141,7 +142,8 @@ double MiningWorker::getHashRate() const {
 // MiningEngine implementation
 MiningEngine::MiningEngine(Blockchain& blockchain, const MiningConfig& config)
     : blockchain(blockchain), config(config), isMining(false), shouldStop(false),
-      currentDifficulty(config.targetDifficulty), lastDifficultyAdjustment(0) {
+      currentDifficulty(config.targetDifficulty), lastDifficultyAdjustment(0),
+      harmonyInitialized(false), harmonyHealthy(false) {
     Logger::info("Mining engine initialized with difficulty: " + std::to_string(currentDifficulty));
 }
 
@@ -432,7 +434,7 @@ void MiningEngine::updateConfig(const MiningConfig& newConfig) {
     Logger::info("Mining configuration updated");
 }
 
-bool MiningEngine::validateBlock(const Block& block) const {
+bool MiningEngine::validateBlock(const Block& block) {
     // Validate block structure
     if (block.getIndex() < 0) return false;
     if (block.getHash().empty()) return false;
@@ -448,7 +450,7 @@ bool MiningEngine::validateBlock(const Block& block) const {
     return true;
 }
 
-bool MiningEngine::validateTransaction(const Transaction& transaction) const {
+bool MiningEngine::validateTransaction(const Transaction& transaction) {
     // Basic transaction validation
     if (transaction.getSender().empty() && transaction.getRecipient().empty()) return false;
     if (transaction.getAmount() < 0) return false;
@@ -658,74 +660,476 @@ nlohmann::json MiningPool::getPoolStats() const {
     return stats;
 }
 
-// ConsensusEngine implementation
-ConsensusEngine::ConsensusEngine(Blockchain& blockchain, MiningEngine& miningEngine)
-    : blockchain(blockchain), miningEngine(miningEngine) {
-}
 
-bool ConsensusEngine::validateBlockConsensus(const Block& block) const {
-    // Validate block size
-    if (block.getTransactions().size() > maxBlockSize) {
+
+// Enhanced MiningEngine ConsensusEngine interface implementation
+bool MiningEngine::initialize() {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
+    
+    try {
+        Logger::info("Initializing MiningEngine for consensus harmony");
+        
+        // Initialize harmony-specific components
+        harmonyMetrics = HarmonyMetrics{};
+        harmonyHealthy = true;
+        harmonyInitialized = true;
+        
+        Logger::info("MiningEngine harmony integration initialized successfully");
+        return true;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Failed to initialize MiningEngine harmony integration: " + std::string(e.what()));
+        harmonyInitialized = false;
+        harmonyHealthy = false;
         return false;
     }
+}
+
+void MiningEngine::shutdown() {
+    Logger::info("Shutting down MiningEngine harmony integration");
     
-    // Validate block time
-    auto now = std::chrono::system_clock::now();
-    auto blockTime = std::chrono::system_clock::from_time_t(block.getTimestamp());
-    auto timeDiff = std::chrono::duration_cast<std::chrono::seconds>(now - blockTime).count();
+    // Stop mining if active
+    stopMining();
     
-    if (timeDiff > maxBlockTime) {
-        return false;
+    std::lock_guard<std::mutex> lock(harmonyMutex);
+    harmonyInitialized = false;
+    harmonyHealthy = false;
+    
+    Logger::info("MiningEngine harmony integration shut down successfully");
+}
+
+bool MiningEngine::isHealthy() const {
+    return harmonyHealthy.load() && harmonyInitialized.load() && !shouldStop.load();
+}
+
+ConsensusResult MiningEngine::processRequest(const ConsensusRequest& request) {
+    if (!isHealthy()) {
+        return ConsensusResult(false, ConsensusType::PROOF_OF_WORK, 0.0, 
+                              "MiningEngine not healthy or not initialized");
     }
     
-    // Validate mining difficulty
-    if (!miningEngine.validateDifficulty(block)) {
+    try {
+        Logger::info("Processing consensus request in MiningEngine: " + request.requestId);
+        
+        ConsensusResult result;
+        
+        switch (request.type) {
+            case RequestType::BLOCK_VALIDATION: {
+                // Deserialize block from request data
+                Block block = Block::deserialize(request.data);
+                bool isValid = validateBlockHarmony(block, request);
+                double confidence = calculateValidationConfidence(block);
+                
+                result = ConsensusResult(isValid, ConsensusType::PROOF_OF_WORK, confidence,
+                                       isValid ? "PoW validation passed" : "PoW validation failed");
+                break;
+            }
+            
+            case RequestType::TRANSACTION_VALIDATION: {
+                // Deserialize transaction from request data
+                Transaction transaction = Transaction::deserialize(request.data);
+                bool isValid = validateTransactionHarmony(transaction, request);
+                double confidence = calculateValidationConfidence(transaction);
+                
+                result = ConsensusResult(isValid, ConsensusType::PROOF_OF_WORK, confidence,
+                                       isValid ? "PoW transaction validation passed" : "PoW transaction validation failed");
+                break;
+            }
+            
+            case RequestType::PARAMETER_ADJUSTMENT: {
+                // Handle parameter adjustment requests
+                result = ConsensusResult(true, ConsensusType::PROOF_OF_WORK, 1.0,
+                                       "Parameter adjustment acknowledged");
+                break;
+            }
+            
+            default: {
+                result = ConsensusResult(false, ConsensusType::PROOF_OF_WORK, 0.0,
+                                       "Unsupported request type for PoW engine");
+                break;
+            }
+        }
+        
+        // Update harmony metrics
+        updateHarmonyStats(result);
+        
+        // Coordinate with router if needed
+        coordinateWithRouter(request);
+        
+        Logger::info("MiningEngine processed consensus request: " + request.requestId + 
+                    " - Result: " + (result.isValid ? "VALID" : "INVALID"));
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Failed to process consensus request in MiningEngine: " + std::string(e.what()));
+        return ConsensusResult(false, ConsensusType::PROOF_OF_WORK, 0.0,
+                              "Processing failed: " + std::string(e.what()));
+    }
+}
+
+nlohmann::json MiningEngine::getStatus() const {
+    nlohmann::json status = getMiningStatus();
+    
+    // Add harmony-specific status
+    status["harmonyInitialized"] = harmonyInitialized.load();
+    status["harmonyHealthy"] = harmonyHealthy.load();
+    status["consensusType"] = "PROOF_OF_WORK";
+    status["engineName"] = getName();
+    
+    return status;
+}
+
+nlohmann::json MiningEngine::getMetrics() const {
+    nlohmann::json metrics;
+    
+    // Basic mining metrics
+    metrics["mining"] = getMiningStatus();
+    
+    // Harmony-specific metrics
+    metrics["harmony"] = getHarmonyMetrics();
+    
+    return metrics;
+}
+
+bool MiningEngine::adjustParameters(const std::map<std::string, double>& parameters) {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
+    
+    try {
+        Logger::info("Adjusting MiningEngine parameters for consensus harmony");
+        
+        bool parametersChanged = false;
+        
+        for (const auto& [param, value] : parameters) {
+            if (param == "difficulty") {
+                if (value >= config.minDifficulty && value <= config.maxDifficulty) {
+                    currentDifficulty = static_cast<uint64_t>(value);
+                    parametersChanged = true;
+                    Logger::info("Adjusted mining difficulty to: " + std::to_string(currentDifficulty));
+                }
+            } else if (param == "targetBlockTime") {
+                if (value > 0) {
+                    config.targetBlockTime = static_cast<uint64_t>(value);
+                    parametersChanged = true;
+                    Logger::info("Adjusted target block time to: " + std::to_string(config.targetBlockTime));
+                }
+            } else if (param == "miningReward") {
+                if (value >= 0) {
+                    config.miningReward = value;
+                    parametersChanged = true;
+                    Logger::info("Adjusted mining reward to: " + std::to_string(config.miningReward));
+                }
+            } else if (param == "transactionFee") {
+                if (value >= 0) {
+                    config.transactionFee = value;
+                    parametersChanged = true;
+                    Logger::info("Adjusted transaction fee to: " + std::to_string(config.transactionFee));
+                }
+            }
+            
+            // Store parameter history
+            harmonyMetrics.parameterHistory[param] = value;
+        }
+        
+        if (parametersChanged) {
+            logMiningEvent("parameters_adjusted", nlohmann::json(parameters));
+        }
+        
+        return parametersChanged;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Failed to adjust MiningEngine parameters: " + std::string(e.what()));
         return false;
     }
-    
-    return true;
 }
 
-bool ConsensusEngine::validateTransactionConsensus(const Transaction& transaction) const {
-    // Basic transaction validation
-    if (transaction.getSender().empty() && transaction.getRecipient().empty()) {
+std::map<std::string, double> MiningEngine::getParameters() const {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
+    
+    std::map<std::string, double> parameters;
+    parameters["difficulty"] = static_cast<double>(currentDifficulty);
+    parameters["targetBlockTime"] = static_cast<double>(config.targetBlockTime);
+    parameters["miningReward"] = config.miningReward;
+    parameters["transactionFee"] = config.transactionFee;
+    parameters["maxDifficulty"] = static_cast<double>(config.maxDifficulty);
+    parameters["minDifficulty"] = static_cast<double>(config.minDifficulty);
+    parameters["maxBlockSize"] = static_cast<double>(config.maxBlockSize);
+    parameters["maxTransactionsPerBlock"] = static_cast<double>(config.maxTransactionsPerBlock);
+    
+    return parameters;
+}
+
+// Harmony-specific validation methods
+bool MiningEngine::validateBlockHarmony(const Block& block, const ConsensusRequest& request) {
+    try {
+        Logger::debug("Validating block with harmony integration: " + std::to_string(block.getIndex()));
+        
+        // Perform standard PoW validation
+        bool basicValidation = validateBlock(block);
+        if (!basicValidation) {
+            Logger::debug("Block failed basic PoW validation");
+            return false;
+        }
+        
+        // Additional harmony-specific validations
+        
+        // Check if block meets current difficulty requirements
+        if (!validateDifficulty(block)) {
+            Logger::debug("Block failed difficulty validation");
+            return false;
+        }
+        
+        // Validate block timing for harmony coordination
+        auto now = std::chrono::system_clock::now();
+        auto blockTime = std::chrono::system_clock::from_time_t(block.getTimestamp());
+        auto timeDiff = std::chrono::duration_cast<std::chrono::seconds>(now - blockTime).count();
+        
+        // Allow some tolerance for network delays and coordination
+        if (timeDiff > static_cast<int64_t>(config.targetBlockTime * 2)) {
+            Logger::debug("Block timestamp too old for harmony coordination");
+            return false;
+        }
+        
+        // Check if block size is within harmony limits
+        size_t blockSize = block.serialize().length();
+        if (blockSize > config.maxBlockSize) {
+            Logger::debug("Block size exceeds harmony limits");
+            return false;
+        }
+        
+        // Validate transaction count for harmony coordination
+        if (block.getTransactions().size() > config.maxTransactionsPerBlock) {
+            Logger::debug("Block has too many transactions for harmony coordination");
+            return false;
+        }
+        
+        Logger::debug("Block passed harmony validation");
+        return true;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error in block harmony validation: " + std::string(e.what()));
         return false;
     }
-    
-    if (transaction.getAmount() < 0) {
+}
+
+bool MiningEngine::validateTransactionHarmony(const Transaction& transaction, const ConsensusRequest& request) {
+    try {
+        Logger::debug("Validating transaction with harmony integration: " + transaction.calculateHash());
+        
+        // Perform standard PoW transaction validation
+        bool basicValidation = validateTransaction(transaction);
+        if (!basicValidation) {
+            Logger::debug("Transaction failed basic PoW validation");
+            return false;
+        }
+        
+        // Additional harmony-specific validations
+        
+        // Check transaction fee meets minimum requirements for harmony coordination
+        if (transaction.getAmount() > 0 && transaction.getAmount() < config.transactionFee) {
+            Logger::debug("Transaction fee too low for harmony coordination");
+            return false;
+        }
+        
+        // Validate transaction format for harmony processing
+        if (transaction.getSender().empty() && transaction.getRecipient().empty()) {
+            Logger::debug("Transaction missing required fields for harmony processing");
+            return false;
+        }
+        
+        // Check if transaction is not a duplicate in pending queue
+        std::lock_guard<std::mutex> lock(queueMutex);
+        for (const auto& pendingTx : pendingTransactions) {
+            if (pendingTx.calculateHash() == transaction.calculateHash()) {
+                Logger::debug("Transaction already in harmony processing queue");
+                return false;
+            }
+        }
+        
+        Logger::debug("Transaction passed harmony validation");
+        return true;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error in transaction harmony validation: " + std::string(e.what()));
         return false;
     }
+}
+
+double MiningEngine::calculateValidationConfidence(const Block& block) const {
+    try {
+        double confidence = 1.0;
+        
+        // Reduce confidence based on block age
+        auto now = std::chrono::system_clock::now();
+        auto blockTime = std::chrono::system_clock::from_time_t(block.getTimestamp());
+        auto ageSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - blockTime).count();
+        
+        if (ageSeconds > static_cast<int64_t>(config.targetBlockTime)) {
+            confidence *= 0.9; // Reduce confidence for older blocks
+        }
+        
+        // Adjust confidence based on difficulty validation
+        std::string hash = block.calculateHash();
+        std::string target(currentDifficulty, '0');
+        if (hash.substr(0, currentDifficulty) == target) {
+            confidence *= 1.0; // Full confidence for proper difficulty
+        } else {
+            confidence *= 0.5; // Reduced confidence for improper difficulty
+        }
+        
+        // Adjust confidence based on transaction count
+        size_t txCount = block.getTransactions().size();
+        if (txCount > 0 && txCount <= config.maxTransactionsPerBlock) {
+            confidence *= 1.0; // Full confidence for reasonable transaction count
+        } else if (txCount > config.maxTransactionsPerBlock) {
+            confidence *= 0.7; // Reduced confidence for too many transactions
+        }
+        
+        return std::max(0.0, std::min(1.0, confidence));
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error calculating block validation confidence: " + std::string(e.what()));
+        return 0.0;
+    }
+}
+
+double MiningEngine::calculateValidationConfidence(const Transaction& transaction) const {
+    try {
+        double confidence = 1.0;
+        
+        // Adjust confidence based on transaction amount
+        if (transaction.getAmount() >= config.transactionFee) {
+            confidence *= 1.0; // Full confidence for proper fee
+        } else if (transaction.getAmount() > 0) {
+            confidence *= 0.8; // Reduced confidence for low fee
+        }
+        
+        // Adjust confidence based on transaction completeness
+        if (!transaction.getSender().empty() && !transaction.getRecipient().empty()) {
+            confidence *= 1.0; // Full confidence for complete transaction
+        } else {
+            confidence *= 0.6; // Reduced confidence for incomplete transaction
+        }
+        
+        // Adjust confidence based on transaction hash validity
+        std::string hash = transaction.calculateHash();
+        if (!hash.empty() && hash.length() == 64) { // SHA256 hash length
+            confidence *= 1.0; // Full confidence for valid hash
+        } else {
+            confidence *= 0.5; // Reduced confidence for invalid hash
+        }
+        
+        return std::max(0.0, std::min(1.0, confidence));
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error calculating transaction validation confidence: " + std::string(e.what()));
+        return 0.0;
+    }
+}
+
+// Metrics collection for harmony integration
+void MiningEngine::collectHarmonyMetrics() {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
     
-    // Check if sender has sufficient balance (simplified)
-    // In a real implementation, you'd check the actual balance
+    try {
+        // Update harmony metrics timestamp
+        harmonyMetrics.lastHarmonyUpdate = std::chrono::steady_clock::now();
+        
+        // Calculate average confidence from recent validations
+        if (harmonyMetrics.totalHarmonyValidations > 0) {
+            // This would be enhanced with actual confidence tracking
+            harmonyMetrics.averageConfidence = static_cast<double>(harmonyMetrics.successfulHarmonyValidations) / 
+                                              harmonyMetrics.totalHarmonyValidations;
+        }
+        
+        Logger::debug("Harmony metrics collected for MiningEngine");
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error collecting harmony metrics: " + std::string(e.what()));
+    }
+}
+
+void MiningEngine::updateHarmonyStats(const ConsensusResult& result) {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
     
-    return true;
+    try {
+        harmonyMetrics.totalHarmonyValidations++;
+        
+        if (result.isValid) {
+            harmonyMetrics.successfulHarmonyValidations++;
+        }
+        
+        // Update average confidence
+        if (harmonyMetrics.totalHarmonyValidations > 0) {
+            double currentAvg = harmonyMetrics.averageConfidence;
+            double newAvg = (currentAvg * (harmonyMetrics.totalHarmonyValidations - 1) + result.confidence) / 
+                           harmonyMetrics.totalHarmonyValidations;
+            harmonyMetrics.averageConfidence = newAvg;
+        }
+        
+        harmonyMetrics.lastHarmonyUpdate = std::chrono::steady_clock::now();
+        
+        Logger::debug("Updated harmony stats for MiningEngine");
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error updating harmony stats: " + std::string(e.what()));
+    }
 }
 
-bool ConsensusEngine::isBlockFinalized(uint64_t blockHeight) const {
-    uint64_t currentHeight = blockchain.getChainHeight();
-    return (currentHeight - blockHeight) >= requiredConfirmations;
-}
-
-std::vector<Block> ConsensusEngine::resolveFork(const std::vector<Block>& blocks) const {
-    // Simple longest chain rule
-    if (blocks.empty()) return std::vector<Block>();
+nlohmann::json MiningEngine::getHarmonyMetrics() const {
+    std::lock_guard<std::mutex> lock(harmonyMutex);
     
-    // In a real implementation, you'd implement proper fork resolution
-    // For now, just return the first block
-    return {blocks[0]};
+    nlohmann::json metrics;
+    metrics["totalHarmonyValidations"] = harmonyMetrics.totalHarmonyValidations;
+    metrics["successfulHarmonyValidations"] = harmonyMetrics.successfulHarmonyValidations;
+    metrics["harmonyConflicts"] = harmonyMetrics.harmonyConflicts;
+    metrics["averageConfidence"] = harmonyMetrics.averageConfidence;
+    metrics["harmonySuccessRate"] = harmonyMetrics.totalHarmonyValidations > 0 ? 
+        static_cast<double>(harmonyMetrics.successfulHarmonyValidations) / harmonyMetrics.totalHarmonyValidations : 0.0;
+    
+    // Add parameter history
+    metrics["parameterHistory"] = harmonyMetrics.parameterHistory;
+    
+    // Add timing information
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceUpdate = std::chrono::duration_cast<std::chrono::seconds>(
+        now - harmonyMetrics.lastHarmonyUpdate).count();
+    metrics["secondsSinceLastUpdate"] = timeSinceUpdate;
+    
+    return metrics;
 }
 
-bool ConsensusEngine::isLongestChain(const std::vector<Block>& chain) const {
-    return chain.size() >= blockchain.getChainHeight();
+// Coordination with other consensus mechanisms
+bool MiningEngine::coordinateWithRouter(const ConsensusRequest& request) {
+    try {
+        Logger::debug("Coordinating with consensus router for request: " + request.requestId);
+        
+        // This would implement actual coordination logic with the consensus router
+        // For now, just log the coordination attempt
+        
+        Logger::debug("Coordination with consensus router completed");
+        return true;
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error coordinating with consensus router: " + std::string(e.what()));
+        return false;
+    }
 }
 
-bool ConsensusEngine::validateStake(const std::string& address, double amount) const {
-    // In a real implementation, you'd check actual stake
-    return amount >= minimumStake;
-}
-
-double ConsensusEngine::getStakeWeight(const std::string& address) const {
-    // In a real implementation, you'd calculate actual stake weight
-    return 1.0; // Placeholder
+void MiningEngine::notifyValidationResult(const ConsensusResult& result) {
+    try {
+        Logger::debug("Notifying validation result from MiningEngine");
+        
+        // This would implement actual notification logic to other consensus mechanisms
+        // For now, just log the notification
+        
+        logMiningEvent("validation_result_notified", {
+            {"isValid", result.isValid},
+            {"confidence", result.confidence},
+            {"mechanism", "PROOF_OF_WORK"}
+        });
+        
+    } catch (const std::exception& e) {
+        Logger::error("Error notifying validation result: " + std::string(e.what()));
+    }
 } 

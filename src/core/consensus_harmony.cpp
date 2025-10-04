@@ -1,14 +1,6 @@
-#include "consensus_harmony.h"
-#include "utils.h"
+#include "../../include/core/consensus_harmony.h"
 #include <sstream>
 #include <iomanip>
-
-// ConsensusRequest implementation
-std::string ConsensusRequest::generateRequestId() const {
-    std::stringstream ss;
-    ss << std::hex << timestamp << "_" << static_cast<int>(type);
-    return Utils::calculateSHA256(ss.str()).substr(0, 16);
-}
 
 // ConsensusConfig implementation
 nlohmann::json ConsensusConfig::toJson() const {

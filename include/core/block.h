@@ -24,6 +24,13 @@ private:
     std::string signature;
 
 public:
+    // Default constructor
+    Block() : index(0), previousHash(""), timestamp(time(nullptr)), 
+          nonce(0), validator(""), signature("") {
+        calculateMerkleRoot();
+        hash = calculateHash();
+    }
+    
     // Constructor
     Block(uint64_t indexIn, const std::string& previousHashIn) 
         : index(indexIn), previousHash(previousHashIn), timestamp(time(nullptr)), 

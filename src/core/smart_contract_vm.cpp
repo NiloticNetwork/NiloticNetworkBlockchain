@@ -1,5 +1,5 @@
-#include "smart_contract_vm.h"
-#include "logger.h"
+#include "../../include/core/smart_contract_vm.h"
+#include "../../include/core/logger.h"
 #include <stdexcept>
 #include <algorithm>
 

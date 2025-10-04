@@ -17,9 +17,13 @@
 #include "api.h"
 #include "rate_limiter.h"
 #include "security_middleware.h"
+#include "consensus_harmony_integration.h"
 
 // Global blockchain instance
 Blockchain blockchain;
+
+// Global consensus harmony integration
+std::unique_ptr<ConsensusHarmonyIntegration> harmonyIntegration;
 
 // Global rate limiter
 RateLimiter rateLimiter(60, 1000, std::chrono::minutes(5));
@@ -76,6 +80,19 @@ std::string handleRequest(const std::string& request_data, const std::string& cl
         response["pending_transactions"] = blockchain.getPendingTransactions().size();
         response["difficulty"] = blockchain.getDifficulty();
         response["mining_reward"] = blockchain.getMiningReward();
+        
+        // Add consensus harmony status if available
+        if (harmonyIntegration && harmonyIntegration->isInitialized()) {
+            response["consensus_harmony"] = {
+                {"enabled", true},
+                {"status", harmonyIntegration->getIntegrationStatus()}
+            };
+        } else {
+            response["consensus_harmony"] = {
+                {"enabled", false},
+                {"status", "not_initialized"}
+            };
+        }
         
         std::string jsonResponse = Utils::createJsonResponse(200, response);
         Logger::logApiAccess("/", "GET", clientIP, 200);
@@ -438,6 +455,71 @@ std::string handleRequest(const std::string& request_data, const std::string& cl
             return Utils::createJsonErrorResponse(400, std::string("Validation failed: ") + e.what());
         }
     }
+    else if (path == "/consensus/harmony" && method == "GET") {
+        // Get consensus harmony status
+        nlohmann::json response;
+        
+        if (harmonyIntegration && harmonyIntegration->isInitialized()) {
+            response["enabled"] = true;
+            response["status"] = harmonyIntegration->getIntegrationStatus();
+            
+            // Get harmony manager status if available
+            auto harmonyManager = harmonyIntegration->getHarmonyManager();
+            if (harmonyManager) {
+                response["manager_status"] = harmonyManager->getDetailedStatus();
+                response["metrics"] = harmonyManager->getMetrics();
+                response["security_metrics"] = harmonyManager->getSecurityMetrics();
+            }
+        } else {
+            response["enabled"] = false;
+            response["status"] = "not_initialized";
+            response["message"] = "Consensus harmony system is not available";
+        }
+        
+        std::string jsonResponse = Utils::createJsonResponse(200, response);
+        Logger::logApiAccess("/consensus/harmony", "GET", clientIP, 200);
+        return securityMiddleware.addSecurityHeaders(securityMiddleware.addCorsHeaders(jsonResponse));
+    }
+    else if (path == "/consensus/harmony/emergency" && method == "POST") {
+        // Emergency consensus mode control
+        try {
+            if (!harmonyIntegration || !harmonyIntegration->isInitialized()) {
+                return Utils::createJsonErrorResponse(503, "Consensus harmony system not available");
+            }
+            
+            nlohmann::json request_data = nlohmann::json::parse(body);
+            std::string action = request_data.value("action", "");
+            
+            auto harmonyManager = harmonyIntegration->getHarmonyManager();
+            if (!harmonyManager) {
+                return Utils::createJsonErrorResponse(503, "Harmony manager not available");
+            }
+            
+            nlohmann::json response;
+            
+            if (action == "activate") {
+                bool activated = harmonyManager->enterEmergencyMode();
+                response["success"] = activated;
+                response["message"] = activated ? "Emergency mode activated" : "Failed to activate emergency mode";
+                response["emergency_active"] = harmonyManager->isInEmergencyMode();
+            } else if (action == "deactivate") {
+                bool deactivated = harmonyManager->exitEmergencyMode();
+                response["success"] = deactivated;
+                response["message"] = deactivated ? "Emergency mode deactivated" : "Failed to deactivate emergency mode";
+                response["emergency_active"] = harmonyManager->isInEmergencyMode();
+            } else if (action == "status") {
+                response["emergency_active"] = harmonyManager->isInEmergencyMode();
+                response["message"] = "Emergency mode status retrieved";
+            } else {
+                return Utils::createJsonErrorResponse(400, "Invalid action. Use 'activate', 'deactivate', or 'status'");
+            }
+            
+            return Utils::createJsonResponse(200, response);
+            
+        } catch (const std::exception& e) {
+            return Utils::createJsonErrorResponse(400, std::string("Emergency mode control failed: ") + e.what());
+        }
+    }
     else {
         // Endpoint not found
         return Utils::createJsonErrorResponse(404, "Endpoint not found");
@@ -537,6 +619,43 @@ int main(int argc, char* argv[]) {
         Logger::info("No existing blockchain data found, starting with a new chain");
     }
     
+    // Initialize consensus harmony integration
+    Logger::info("Initializing Consensus Harmony System...");
+    harmonyIntegration = std::make_unique<ConsensusHarmonyIntegration>(&blockchain);
+    
+    if (harmonyIntegration->initialize()) {
+        Logger::info("Consensus Harmony System initialized successfully");
+        
+        // Run migration if needed
+        if (!harmonyIntegration->isMigrationCompleted()) {
+            Logger::info("Running consensus harmony data migration...");
+            if (harmonyIntegration->migrateExistingData()) {
+                Logger::info("Data migration completed successfully");
+            } else {
+                Logger::error("Data migration failed - continuing with basic functionality");
+            }
+        }
+        
+        // Run integration tests
+        Logger::info("Running consensus harmony integration tests...");
+        if (harmonyIntegration->runIntegrationTests()) {
+            Logger::info("All integration tests passed");
+        } else {
+            Logger::warning("Some integration tests failed - system may have reduced functionality");
+        }
+        
+        // Validate system integrity
+        if (harmonyIntegration->validateSystemIntegrity()) {
+            Logger::info("System integrity validation passed");
+        } else {
+            Logger::error("System integrity validation failed");
+        }
+        
+    } else {
+        Logger::error("Failed to initialize Consensus Harmony System - falling back to basic consensus");
+        harmonyIntegration.reset();
+    }
+    
     // Start the maintenance thread
     std::thread maintenance_thread(blockchainMaintenanceTask);
     
@@ -558,6 +677,14 @@ int main(int argc, char* argv[]) {
     // Clean shutdown
     Logger::info("Shutting down Nilotic Blockchain server...");
     api.stop();
+    
+    // Shutdown consensus harmony integration
+    if (harmonyIntegration) {
+        Logger::info("Shutting down Consensus Harmony System...");
+        harmonyIntegration->shutdown();
+        harmonyIntegration.reset();
+        Logger::info("Consensus Harmony System shutdown completed");
+    }
     
     // Save blockchain state before exiting
     if (blockchain.saveToFile("blockchain_data.json")) {

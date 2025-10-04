@@ -14,7 +14,9 @@
 #include "json.hpp"
 
 // Constructor
-API::API(Blockchain& blockchain) : blockchain(blockchain), miningEngine(blockchain), running(false), server_fd(-1) {}
+API::API(Blockchain& blockchain, ConsensusHarmonyManager* consensus) 
+    : blockchain(blockchain), miningEngine(blockchain), consensusManager(consensus), 
+      running(false), server_fd(-1), websocketRunning(false) {}
 
 // Destructor
 API::~API() {
@@ -71,6 +73,14 @@ void API::start(int port) {
     server_thread = std::thread([this]() {
         this->serverLoop();
     });
+    
+    // Start WebSocket broadcast thread if consensus manager is available
+    if (consensusManager) {
+        websocketRunning = true;
+        websocketBroadcastThread = std::thread([this]() {
+            this->websocketBroadcastLoop();
+        });
+    }
 }
 
 // Stop the API server
@@ -78,6 +88,16 @@ void API::stop() {
     if (!running) return;
     
     running = false;
+    websocketRunning = false;
+    
+    // Close all WebSocket connections
+    {
+        std::lock_guard<std::mutex> lock(websocketMutex);
+        for (int fd : websocketConnections) {
+            close(fd);
+        }
+        websocketConnections.clear();
+    }
     
     if (server_fd >= 0) {
         close(server_fd);
@@ -86,6 +106,10 @@ void API::stop() {
     
     if (server_thread.joinable()) {
         server_thread.join();
+    }
+    
+    if (websocketBroadcastThread.joinable()) {
+        websocketBroadcastThread.join();
     }
     
     Utils::logInfo("API server stopped");
@@ -133,6 +157,230 @@ void API::serverLoop() {
     }
 }
 
+// WebSocket handling methods
+bool API::isWebSocketRequest(const std::map<std::string, std::string>& headers) const {
+    auto it = headers.find("Upgrade");
+    if (it != headers.end() && it->second == "websocket") {
+        return true;
+    }
+    return false;
+}
+
+void API::handleWebSocketConnection(int client_fd, const std::map<std::string, std::string>& headers) {
+    // Simple WebSocket handshake
+    std::string response = "HTTP/1.1 101 Switching Protocols\r\n";
+    response += "Upgrade: websocket\r\n";
+    response += "Connection: Upgrade\r\n";
+    response += "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n"; // Simplified
+    response += "\r\n";
+    
+    send(client_fd, response.c_str(), response.length(), 0);
+    
+    // Add to WebSocket connections
+    {
+        std::lock_guard<std::mutex> lock(websocketMutex);
+        websocketConnections.insert(client_fd);
+    }
+    
+    Utils::logInfo("WebSocket connection established");
+}
+
+void API::websocketBroadcastLoop() {
+    while (websocketRunning && consensusManager) {
+        try {
+            // Get real-time consensus data
+            nlohmann::json consensusData;
+            consensusData["type"] = "consensus_update";
+            consensusData["timestamp"] = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+            
+            if (consensusManager->isInitialized()) {
+                consensusData["status"] = consensusManager->getDetailedStatus();
+                consensusData["metrics"] = consensusManager->getMetrics();
+            } else {
+                consensusData["status"] = "not_initialized";
+            }
+            
+            broadcastToWebSockets(consensusData.dump());
+        } catch (const std::exception& e) {
+            Utils::logError("WebSocket broadcast error: " + std::string(e.what()));
+        }
+        
+        std::this_thread::sleep_for(std::chrono::seconds(5)); // Broadcast every 5 seconds
+    }
+}
+
+void API::broadcastToWebSockets(const std::string& message) {
+    std::lock_guard<std::mutex> lock(websocketMutex);
+    std::vector<int> toRemove;
+    
+    for (int fd : websocketConnections) {
+        // Simple WebSocket frame format (text frame)
+        std::string frame;
+        frame.push_back(0x81); // FIN + text frame
+        
+        if (message.length() < 126) {
+            frame.push_back(static_cast<char>(message.length()));
+        } else {
+            frame.push_back(126);
+            frame.push_back((message.length() >> 8) & 0xFF);
+            frame.push_back(message.length() & 0xFF);
+        }
+        
+        frame += message;
+        
+        if (send(fd, frame.c_str(), frame.length(), MSG_NOSIGNAL) < 0) {
+            toRemove.push_back(fd);
+        }
+    }
+    
+    // Remove failed connections
+    for (int fd : toRemove) {
+        websocketConnections.erase(fd);
+        close(fd);
+    }
+}
+
+void API::removeWebSocketConnection(int client_fd) {
+    std::lock_guard<std::mutex> lock(websocketMutex);
+    websocketConnections.erase(client_fd);
+}
+
+// Consensus API helper methods
+std::string API::handleConsensusStatusRequest() {
+    nlohmann::json response;
+    
+    if (!consensusManager) {
+        response["error"] = "Consensus manager not available";
+        return response.dump(4);
+    }
+    
+    try {
+        response["status"] = "success";
+        response["initialized"] = consensusManager->isInitialized();
+        response["running"] = consensusManager->isRunning();
+        response["emergency_mode"] = consensusManager->isInEmergencyMode();
+        response["active_engines"] = nlohmann::json::array();
+        
+        for (auto type : consensusManager->getActiveEngines()) {
+            std::string typeName;
+            switch (type) {
+                case ConsensusType::PROOF_OF_WORK: typeName = "PROOF_OF_WORK"; break;
+                case ConsensusType::PROOF_OF_STAKE: typeName = "PROOF_OF_STAKE"; break;
+                case ConsensusType::PROOF_OF_RESOURCE_CONTRIBUTION: typeName = "PROOF_OF_RESOURCE_CONTRIBUTION"; break;
+                case ConsensusType::VOTING_CONSENSUS: typeName = "VOTING_CONSENSUS"; break;
+                case ConsensusType::SMART_CONTRACT_VALIDATION: typeName = "SMART_CONTRACT_VALIDATION"; break;
+            }
+            response["active_engines"].push_back(typeName);
+        }
+        
+        response["detailed_status"] = consensusManager->getDetailedStatus();
+    } catch (const std::exception& e) {
+        response["error"] = e.what();
+    }
+    
+    return response.dump(4);
+}
+
+std::string API::handleConsensusMetricsRequest() {
+    nlohmann::json response;
+    
+    if (!consensusManager) {
+        response["error"] = "Consensus manager not available";
+        return response.dump(4);
+    }
+    
+    try {
+        response["status"] = "success";
+        response["metrics"] = consensusManager->getMetrics();
+        response["timestamp"] = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    } catch (const std::exception& e) {
+        response["error"] = e.what();
+    }
+    
+    return response.dump(4);
+}
+
+std::string API::handleConsensusParameterAdjustment(const std::string& body) {
+    nlohmann::json response;
+    
+    if (!consensusManager) {
+        response["error"] = "Consensus manager not available";
+        return response.dump(4);
+    }
+    
+    try {
+        nlohmann::json requestData = nlohmann::json::parse(body);
+        std::string consensusTypeStr = requestData["consensus_type"];
+        std::string parameter = requestData["parameter"];
+        double value = requestData["value"];
+        
+        // Convert string to ConsensusType
+        ConsensusType type;
+        if (consensusTypeStr == "PROOF_OF_WORK") {
+            type = ConsensusType::PROOF_OF_WORK;
+        } else if (consensusTypeStr == "PROOF_OF_STAKE") {
+            type = ConsensusType::PROOF_OF_STAKE;
+        } else if (consensusTypeStr == "PROOF_OF_RESOURCE_CONTRIBUTION") {
+            type = ConsensusType::PROOF_OF_RESOURCE_CONTRIBUTION;
+        } else if (consensusTypeStr == "VOTING_CONSENSUS") {
+            type = ConsensusType::VOTING_CONSENSUS;
+        } else if (consensusTypeStr == "SMART_CONTRACT_VALIDATION") {
+            type = ConsensusType::SMART_CONTRACT_VALIDATION;
+        } else {
+            response["error"] = "Invalid consensus type";
+            return response.dump(4);
+        }
+        
+        bool success = consensusManager->setConsensusParameter(type, parameter, value);
+        
+        if (success) {
+            response["status"] = "success";
+            response["message"] = "Parameter adjusted successfully";
+            response["consensus_type"] = consensusTypeStr;
+            response["parameter"] = parameter;
+            response["value"] = value;
+        } else {
+            response["error"] = "Failed to adjust parameter";
+        }
+    } catch (const std::exception& e) {
+        response["error"] = e.what();
+    }
+    
+    return response.dump(4);
+}
+
+std::string API::handleConsensusConfigUpdate(const std::string& body) {
+    nlohmann::json response;
+    
+    if (!consensusManager) {
+        response["error"] = "Consensus manager not available";
+        return response.dump(4);
+    }
+    
+    try {
+        nlohmann::json configData = nlohmann::json::parse(body);
+        
+        ConsensusConfig newConfig;
+        newConfig.fromJson(configData);
+        
+        bool success = consensusManager->updateConfiguration(newConfig);
+        
+        if (success) {
+            response["status"] = "success";
+            response["message"] = "Configuration updated successfully";
+            response["config"] = consensusManager->getConfiguration().toJson();
+        } else {
+            response["error"] = "Failed to update configuration";
+        }
+    } catch (const std::exception& e) {
+        response["error"] = e.what();
+    }
+    
+    return response.dump(4);
+}
+
 // Handle individual client connection
 void API::handleClient(int client_fd, struct sockaddr_in client_addr) {
     char buffer[4096];
@@ -155,6 +403,12 @@ void API::handleClient(int client_fd, struct sockaddr_in client_addr) {
     Utils::logInfo("Request: " + method + " " + path + " from " + 
                    inet_ntoa(client_addr.sin_addr) + ":" + std::to_string(ntohs(client_addr.sin_port)));
     Utils::logInfo("Parsed path: '" + path + "'");
+    
+    // Check if this is a WebSocket upgrade request
+    if (isWebSocketRequest(headers) && path == "/consensus/monitor") {
+        handleWebSocketConnection(client_fd, headers);
+        return; // Don't close the connection, keep it open for WebSocket
+    }
     
     // Generate response
     std::string response = generateResponse(method, path, headers, body);
@@ -514,6 +768,185 @@ std::string API::generateResponse(const std::string& method, const std::string& 
             } catch (const std::exception& e) {
                 response["error"] = e.what();
                 status = "400 Bad Request";
+            }
+        }
+        else if (path == "/consensus/status" && method == "GET") {
+            // Get consensus status
+            std::string consensusResponse = handleConsensusStatusRequest();
+            return "HTTP/1.1 200 OK\r\n"
+                   "Content-Type: application/json\r\n"
+                   "Access-Control-Allow-Origin: *\r\n"
+                   "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                   "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                   "Content-Length: " + std::to_string(consensusResponse.length()) + "\r\n"
+                   "\r\n" + consensusResponse;
+        }
+        else if (path == "/consensus/metrics" && method == "GET") {
+            // Get consensus metrics
+            std::string consensusResponse = handleConsensusMetricsRequest();
+            return "HTTP/1.1 200 OK\r\n"
+                   "Content-Type: application/json\r\n"
+                   "Access-Control-Allow-Origin: *\r\n"
+                   "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                   "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                   "Content-Length: " + std::to_string(consensusResponse.length()) + "\r\n"
+                   "\r\n" + consensusResponse;
+        }
+        else if (path == "/consensus/parameters" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
+                // Adjust consensus parameters
+                std::string consensusResponse = handleConsensusParameterAdjustment(body);
+                return "HTTP/1.1 200 OK\r\n"
+                       "Content-Type: application/json\r\n"
+                       "Access-Control-Allow-Origin: *\r\n"
+                       "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                       "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                       "Content-Length: " + std::to_string(consensusResponse.length()) + "\r\n"
+                       "\r\n" + consensusResponse;
+            }
+        }
+        else if (path == "/consensus/config" && method == "GET") {
+            // Get consensus configuration
+            if (!consensusManager) {
+                response["error"] = "Consensus manager not available";
+                status = "503 Service Unavailable";
+            } else {
+                try {
+                    response["status"] = "success";
+                    response["config"] = consensusManager->getConfiguration().toJson();
+                } catch (const std::exception& e) {
+                    response["error"] = e.what();
+                    status = "500 Internal Server Error";
+                }
+            }
+        }
+        else if (path == "/consensus/config" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else {
+                // Update consensus configuration
+                std::string consensusResponse = handleConsensusConfigUpdate(body);
+                return "HTTP/1.1 200 OK\r\n"
+                       "Content-Type: application/json\r\n"
+                       "Access-Control-Allow-Origin: *\r\n"
+                       "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                       "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                       "Content-Length: " + std::to_string(consensusResponse.length()) + "\r\n"
+                       "\r\n" + consensusResponse;
+            }
+        }
+        else if (path == "/consensus/engines" && method == "GET") {
+            // Get active consensus engines
+            if (!consensusManager) {
+                response["error"] = "Consensus manager not available";
+                status = "503 Service Unavailable";
+            } else {
+                try {
+                    response["status"] = "success";
+                    response["engines"] = nlohmann::json::array();
+                    
+                    for (auto type : consensusManager->getActiveEngines()) {
+                        nlohmann::json engineInfo;
+                        switch (type) {
+                            case ConsensusType::PROOF_OF_WORK:
+                                engineInfo["type"] = "PROOF_OF_WORK";
+                                engineInfo["name"] = "Proof of Work";
+                                break;
+                            case ConsensusType::PROOF_OF_STAKE:
+                                engineInfo["type"] = "PROOF_OF_STAKE";
+                                engineInfo["name"] = "Proof of Stake";
+                                break;
+                            case ConsensusType::PROOF_OF_RESOURCE_CONTRIBUTION:
+                                engineInfo["type"] = "PROOF_OF_RESOURCE_CONTRIBUTION";
+                                engineInfo["name"] = "Proof of Resource Contribution";
+                                break;
+                            case ConsensusType::VOTING_CONSENSUS:
+                                engineInfo["type"] = "VOTING_CONSENSUS";
+                                engineInfo["name"] = "Voting Consensus";
+                                break;
+                            case ConsensusType::SMART_CONTRACT_VALIDATION:
+                                engineInfo["type"] = "SMART_CONTRACT_VALIDATION";
+                                engineInfo["name"] = "Smart Contract Validation";
+                                break;
+                        }
+                        engineInfo["parameters"] = consensusManager->getConsensusParameters(type);
+                        response["engines"].push_back(engineInfo);
+                    }
+                } catch (const std::exception& e) {
+                    response["error"] = e.what();
+                    status = "500 Internal Server Error";
+                }
+            }
+        }
+        else if (path == "/consensus/emergency" && method == "GET") {
+            // Get emergency mode status
+            if (!consensusManager) {
+                response["error"] = "Consensus manager not available";
+                status = "503 Service Unavailable";
+            } else {
+                try {
+                    response["status"] = "success";
+                    response["emergency_mode"] = consensusManager->isInEmergencyMode();
+                    if (consensusManager->isInEmergencyMode()) {
+                        auto emergencyMode = consensusManager->getEmergencyMode();
+                        if (emergencyMode) {
+                            response["emergency_details"] = emergencyMode->getStatus();
+                        }
+                    }
+                } catch (const std::exception& e) {
+                    response["error"] = e.what();
+                    status = "500 Internal Server Error";
+                }
+            }
+        }
+        else if (path == "/consensus/emergency/enter" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else if (!consensusManager) {
+                response["error"] = "Consensus manager not available";
+                status = "503 Service Unavailable";
+            } else {
+                try {
+                    bool success = consensusManager->enterEmergencyMode();
+                    if (success) {
+                        response["status"] = "success";
+                        response["message"] = "Emergency mode activated";
+                    } else {
+                        response["error"] = "Failed to enter emergency mode";
+                        status = "500 Internal Server Error";
+                    }
+                } catch (const std::exception& e) {
+                    response["error"] = e.what();
+                    status = "500 Internal Server Error";
+                }
+            }
+        }
+        else if (path == "/consensus/emergency/exit" && method == "POST") {
+            if (!isAuthorized(headers, method)) {
+                response["error"] = "Unauthorized";
+                status = "401 Unauthorized";
+            } else if (!consensusManager) {
+                response["error"] = "Consensus manager not available";
+                status = "503 Service Unavailable";
+            } else {
+                try {
+                    bool success = consensusManager->exitEmergencyMode();
+                    if (success) {
+                        response["status"] = "success";
+                        response["message"] = "Emergency mode deactivated";
+                    } else {
+                        response["error"] = "Failed to exit emergency mode";
+                        status = "500 Internal Server Error";
+                    }
+                } catch (const std::exception& e) {
+                    response["error"] = e.what();
+                    status = "500 Internal Server Error";
+                }
             }
         }
         else {

@@ -24,6 +24,13 @@ private:
     std::string contractState;
 
 public:
+    // Default constructor
+    Transaction() : sender(""), recipient(""), amount(0.0),
+          timestamp(time(nullptr)), isOffline(false), contractCode(""), contractState("") {
+        hash = calculateHash();
+        signature = "";
+    }
+    
     // Constructor for regular transaction
     Transaction(const std::string& senderIn, const std::string& recipientIn, 
                 double amountIn)

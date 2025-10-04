@@ -797,7 +797,7 @@ bool NetworkUtils::isValidAddress(const std::string& address) {
 }
 
 bool NetworkUtils::isValidPort(uint16_t port) {
-    return port > 0 && port < 65536;
+    return port > 0;
 }
 
 std::string NetworkUtils::resolveHostname(const std::string& hostname) {

@@ -1,5 +1,5 @@
-#include "../include/optimized_blockchain.h"
-#include "../include/utils.h"
+#include "../../include/core/optimized_blockchain.h"
+#include "../../include/core/utils.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -8,6 +8,13 @@
 #include <condition_variable>
 #include <queue>
 #include <functional>
+
+// System headers for socket operations
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/select.h>
 
 // Optimized HTTP server with connection pooling and async processing
 class OptimizedAPIServer {
@@ -394,11 +401,11 @@ private:
         auto metrics = blockchain->getMetrics();
         
         nlohmann::json response;
-        response["transactionsProcessed"] = metrics.transactionsProcessed;
-        response["blocksMined"] = metrics.blocksMined;
-        response["averageResponseTime"] = metrics.averageResponseTime;
-        response["memoryUsage"] = metrics.memoryUsage;
-        response["cpuUsage"] = metrics.cpuUsage;
+        response["transactionsProcessed"] = metrics.transactionsProcessed.load();
+        response["blocksMined"] = metrics.blocksMined.load();
+        response["averageResponseTime"] = metrics.averageResponseTime.load();
+        response["memoryUsage"] = metrics.memoryUsage.load();
+        response["cpuUsage"] = metrics.cpuUsage.load();
         
         return create_json_response(200, response);
     }
@@ -508,34 +515,5 @@ private:
     }
 };
 
-// Main function for optimized API server
-int main(int argc, char* argv[]) {
-    int port = 8080;
-    bool debug_mode = false;
-
-    // Parse command line arguments
-    for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg == "--port" && i + 1 < argc) {
-            port = std::stoi(argv[++i]);
-        } else if (arg == "--debug") {
-            debug_mode = true;
-        }
-    }
-
-    Utils::logInfo("Starting Optimized Nilotic Blockchain API Server");
-    Utils::logInfo("Port: " + std::to_string(port));
-    Utils::logInfo("Debug mode: " + std::string(debug_mode ? "enabled" : "disabled"));
-
-    OptimizedAPIServer server(port, debug_mode);
-    
-    if (!server.start()) {
-        Utils::logError("Failed to start server");
-        return 1;
-    }
-
-    Utils::logInfo("Server is ready to accept connections");
-    server.accept_connections();
-
-    return 0;
-} 
+// OptimizedAPIServer implementation complete
+// Main function is in main.cpp 

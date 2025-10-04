@@ -11,6 +11,11 @@
 #include "block.h"
 #include "transaction.h"
 #include "logger.h"
+#include "pos_consensus_engine.h"
+#include "consensus_harmony_integration.h"
+
+// Forward declarations for harmony integration
+class ConsensusHarmonyManager;
 
 class Blockchain {
 private:
@@ -29,12 +34,23 @@ private:
     std::mutex chainMutex;
     std::mutex txMutex;
     
-    // Validators for PoS (address -> stake amount)
+    // Validators for PoS (address -> stake amount) - DEPRECATED, use posEngine
     std::map<std::string, double> validators;
+    
+    // PoS Consensus Engine for harmony integration
+    std::unique_ptr<PoSConsensusEngine> posEngine;
+    
+    // Consensus Harmony Integration
+    ConsensusHarmonyManager* harmonyManager;
+    std::unique_ptr<ConsensusHarmonyIntegration> harmonyIntegration;
 
 public:
     // Constructor
-    Blockchain() : difficulty(4), miningReward(100.0) {
+    Blockchain() : difficulty(4), miningReward(100.0), harmonyManager(nullptr) {
+        // Initialize PoS consensus engine
+        posEngine = std::make_unique<PoSConsensusEngine>();
+        posEngine->initialize();
+        
         // Create the genesis block
         createGenesisBlock();
     }
@@ -247,47 +263,66 @@ public:
             return false;
         }
         
-        // Move tokens from balance to stake
-        balances[address] -= amount;
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
         
-        if (validators.find(address) == validators.end()) {
-            validators[address] = 0;
+        // Use PoS engine for staking
+        if (posEngine->stakeTokens(address, amount)) {
+            // Move tokens from balance to stake
+            balances[address] -= amount;
+            
+            // Update legacy validators map for backward compatibility
+            if (validators.find(address) == validators.end()) {
+                validators[address] = 0;
+            }
+            validators[address] += amount;
+            
+            Logger::info("Tokens staked: " + std::to_string(amount) + " by " + address);
+            return true;
         }
         
-        validators[address] += amount;
-        
-        Logger::info("Tokens staked: " + std::to_string(amount) + " by " + address);
-        
-        return true;
+        return false;
     }
     
     // Choose a validator for the next block (PoS)
     std::string selectValidator() const {
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
+        
+        // Use PoS engine for validator selection
+        std::string selectedValidator = posEngine->selectValidator();
+        
+        if (!selectedValidator.empty()) {
+            return selectedValidator;
+        }
+        
+        // Fallback to legacy method if PoS engine fails
         if (validators.empty()) {
             return "";
         }
         
-        // In a real implementation, this would use a more sophisticated
-        // selection algorithm based on stake amount and randomization
-        
-        // For now, simply return the validator with the highest stake
-        std::string selectedValidator;
+        // For backward compatibility, return validator with highest stake
+        std::string fallbackValidator;
         double maxStake = 0;
         
         for (const auto& pair : validators) {
             if (pair.second > maxStake) {
                 maxStake = pair.second;
-                selectedValidator = pair.first;
+                fallbackValidator = pair.first;
             }
         }
         
-        return selectedValidator;
+        return fallbackValidator;
     }
     
     // Validate a block using PoS
     bool validateBlockPoS(Block& block, const std::string& validatorAddress, const std::string& signature) {
-        if (validators.find(validatorAddress) == validators.end()) {
-            Logger::error("Block validation failed: Not a validator - " + validatorAddress);
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
+        
+        // Use PoS engine for block validation
+        if (!posEngine->validateBlockWithStake(block, validatorAddress)) {
+            Logger::error("Block validation failed: PoS engine validation failed - " + validatorAddress);
             return false;
         }
         
@@ -298,8 +333,16 @@ public:
         // In a real implementation, this would verify the cryptographic signature
         // For now, we'll just accept any signature as valid
         
+        // Get validator info from PoS engine
+        ValidatorInfo validatorInfo = posEngine->getValidatorInfo(validatorAddress);
+        double stake = validatorInfo.stakedAmount;
+        
+        // Fallback to legacy validators if not found in PoS engine
+        if (stake == 0.0 && validators.find(validatorAddress) != validators.end()) {
+            stake = validators[validatorAddress];
+        }
+        
         // Adjust the mining reward based on the validator's stake
-        double stake = validators[validatorAddress];
         double reward = miningReward * (stake / 1000.0); // Example calculation
         
         // Add a reward transaction
@@ -501,6 +544,116 @@ public:
     double getMiningReward() const {
         return miningReward;
     }
+    
+    // PoS Consensus Engine integration methods
+    PoSConsensusEngine* getPoSEngine() const {
+        return posEngine.get();
+    }
+    
+    // Cross-mechanism coordination methods
+    bool validateBlockWithMultipleConsensus(Block& block, const std::vector<ConsensusType>& mechanisms) {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
+        
+        bool allValid = true;
+        
+        for (ConsensusType mechanism : mechanisms) {
+            switch (mechanism) {
+                case ConsensusType::PROOF_OF_STAKE: {
+                    if (!posEngine->validateBlock(block)) {
+                        Logger::error("Multi-consensus validation failed: PoS validation failed");
+                        allValid = false;
+                    }
+                    break;
+                }
+                case ConsensusType::PROOF_OF_WORK: {
+                    // Validate PoW difficulty
+                    std::string target(difficulty, '0');
+                    if (block.getHash().substr(0, difficulty) != target) {
+                        Logger::error("Multi-consensus validation failed: PoW validation failed");
+                        allValid = false;
+                    }
+                    break;
+                }
+                default:
+                    Logger::warning("Multi-consensus validation: Unsupported mechanism");
+                    break;
+            }
+        }
+        
+        return allValid;
+    }
+    
+    // Select validators that support multiple consensus mechanisms
+    std::vector<std::string> selectValidatorsForCoordination(const std::vector<ConsensusType>& mechanisms, size_t count = 3) {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
+        
+        // Use PoS engine for coordinated validator selection
+        return posEngine->selectValidatorsForCoordination(mechanisms);
+    }
+    
+    // Unstake tokens using PoS engine
+    bool unstakeTokens(const std::string& address, double amount) {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        
+        // Update PoS engine with current balances
+        posEngine->setAccountBalances(balances);
+        
+        if (posEngine->unstakeTokens(address, amount)) {
+            // Update balances and legacy validators
+            balances[address] += amount;
+            
+            if (validators.find(address) != validators.end()) {
+                validators[address] -= amount;
+                if (validators[address] <= 0) {
+                    validators.erase(address);
+                }
+            }
+            
+            Logger::info("Tokens unstaked: " + std::to_string(amount) + " by " + address);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // Get PoS consensus status
+    nlohmann::json getPoSStatus() const {
+        if (posEngine) {
+            return posEngine->getStatus();
+        }
+        return nlohmann::json::object();
+    }
+    
+    // Get PoS consensus metrics
+    nlohmann::json getPoSMetrics() const {
+        if (posEngine) {
+            return posEngine->getMetrics();
+        }
+        return nlohmann::json::object();
+    }
+    
+    // Consensus Harmony Integration methods
+    bool initializeConsensusHarmony();
+    void shutdownConsensusHarmony();
+    bool isConsensusHarmonyEnabled() const { return harmonyManager != nullptr; }
+    
+    // Harmony manager access
+    void setConsensusHarmonyManager(ConsensusHarmonyManager* manager) { harmonyManager = manager; }
+    ConsensusHarmonyManager* getConsensusHarmonyManager() const { return harmonyManager; }
+    
+    // Enhanced validation methods using harmony system
+    bool validateBlockWithHarmony(const Block& block);
+    bool validateTransactionWithHarmony(const Transaction& transaction);
+    
+    // Harmony integration status
+    nlohmann::json getConsensusHarmonyStatus() const;
+    bool migrateToConsensusHarmony();
 };
 
 #endif // BLOCKCHAIN_H

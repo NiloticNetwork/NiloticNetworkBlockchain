@@ -4,7 +4,7 @@
 // This is a wrapper around nlohmann/json to make it easier to include
 // and to potentially swap out for another JSON library if needed
 
-#include "../lib/nlohmann_json/single_include/nlohmann/json.hpp"
+#include "../../lib/nlohmann_json/json.hpp"
 
 // Re-export the nlohmann::json class in our own namespace
 namespace json = nlohmann;
