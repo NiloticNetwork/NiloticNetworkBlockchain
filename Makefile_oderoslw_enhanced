@@ -1,0 +1,112 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+INCLUDES = -Iinclude -Iinclude/core
+LIBS = -lcrypto -lssl -lpthread
+
+# Source directories
+SRC_DIR = src/core
+TEST_DIR = tests
+BUILD_DIR = build
+
+# Core source files for OderoSLW
+CORE_SOURCES = \
+    $(SRC_DIR)/utils.cpp \
+    $(SRC_DIR)/logger.cpp \
+    $(SRC_DIR)/oderoslw.cpp \
+    $(SRC_DIR)/oderoslw_manager.cpp
+
+# Test executable
+TEST_TARGET = test_oderoslw_enhanced
+TEST_SOURCES = $(TEST_DIR)/test_oderoslw_enhanced.cpp
+
+# Create build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Build the enhanced OderoSLW test
+$(TEST_TARGET): $(BUILD_DIR) $(CORE_SOURCES) $(TEST_SOURCES)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(TEST_TARGET) $(CORE_SOURCES) $(TEST_SOURCES) $(LIBS)
+
+# Run tests
+test: $(TEST_TARGET)
+	@echo "Running Enhanced OderoSLW Token System Tests..."
+	./$(TEST_TARGET)
+
+# Build and run tests
+all: test
+
+# Clean build artifacts
+clean:
+	rm -f $(TEST_TARGET)
+	rm -rf $(BUILD_DIR)
+
+# Performance test with optimizations
+performance: CXXFLAGS += -O3 -DNDEBUG
+performance: $(TEST_TARGET)
+	@echo "Running performance tests..."
+	./$(TEST_TARGET)
+
+# Debug build
+debug: CXXFLAGS += -DDEBUG -g3
+debug: $(TEST_TARGET)
+	@echo "Debug build completed"
+
+# Memory check with valgrind (if available)
+memcheck: $(TEST_TARGET)
+	@if command -v valgrind >/dev/null 2>&1; then \
+		echo "Running memory check..."; \
+		valgrind --leak-check=full --show-leak-kinds=all ./$(TEST_TARGET); \
+	else \
+		echo "Valgrind not available, skipping memory check"; \
+	fi
+
+# Static analysis with cppcheck (if available)
+static-analysis:
+	@if command -v cppcheck >/dev/null 2>&1; then \
+		echo "Running static analysis..."; \
+		cppcheck --enable=all --std=c++17 $(INCLUDES) $(SRC_DIR)/ $(TEST_DIR)/; \
+	else \
+		echo "Cppcheck not available, skipping static analysis"; \
+	fi
+
+# Code formatting with clang-format (if available)
+format:
+	@if command -v clang-format >/dev/null 2>&1; then \
+		echo "Formatting code..."; \
+		find $(SRC_DIR) $(TEST_DIR) -name "*.cpp" -o -name "*.h" | xargs clang-format -i; \
+		echo "Code formatting completed"; \
+	else \
+		echo "clang-format not available, skipping formatting"; \
+	fi
+
+# Generate documentation with doxygen (if available)
+docs:
+	@if command -v doxygen >/dev/null 2>&1; then \
+		echo "Generating documentation..."; \
+		doxygen Doxyfile 2>/dev/null || echo "Doxyfile not found, skipping documentation"; \
+	else \
+		echo "Doxygen not available, skipping documentation"; \
+	fi
+
+# Install dependencies (Ubuntu/Debian)
+install-deps:
+	@echo "Installing dependencies..."
+	sudo apt-get update
+	sudo apt-get install -y build-essential libssl-dev libcrypto++-dev
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all           - Build and run tests (default)"
+	@echo "  test          - Build and run tests"
+	@echo "  performance   - Build with optimizations and run performance tests"
+	@echo "  debug         - Build debug version"
+	@echo "  memcheck      - Run memory check with valgrind"
+	@echo "  static-analysis - Run static analysis with cppcheck"
+	@echo "  format        - Format code with clang-format"
+	@echo "  docs          - Generate documentation with doxygen"
+	@echo "  clean         - Clean build artifacts"
+	@echo "  install-deps  - Install required dependencies"
+	@echo "  help          - Show this help message"
+
+.PHONY: all test performance debug memcheck static-analysis format docs clean install-deps help

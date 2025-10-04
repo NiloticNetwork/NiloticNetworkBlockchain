@@ -1,0 +1,25 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I. -g
+LDFLAGS = -lpthread
+
+SRCDIR = src/core
+SOURCES = $(SRCDIR)/consensus_config_manager.cpp $(SRCDIR)/consensus_harmony.cpp $(SRCDIR)/logger.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+
+TARGET = test_config_comprehensive
+SOURCE = test_config_comprehensive.cpp
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS) $(SOURCE)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCE) $(OBJECTS) $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+	rm -f comprehensive_test_config.json
+	rm -rf comprehensive_test_backups
+
+.PHONY: all clean
